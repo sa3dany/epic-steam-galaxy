@@ -1,10 +1,16 @@
 const fs = require('fs');
+const crc = require('crc');
 const opn = require('opn');
+const Long = require('long');
 const path = require('path');
+const sharp = require('sharp');
+const {promisify} = require('util');
 const inquirer = require('inquirer');
 const OAuth2 = require('client-oauth2');
 const GogApi = require('./lib/gog-api');
+const Bottleneck = require('bottleneck');
 const GogGame = require('./lib/gog-game');
+const rp = require('request-promise-native');
 const shortcuts = require('steam-shortcut-editor');
 
 
@@ -56,13 +62,13 @@ app.main = async () => {
   let gameShortcuts = games.map((game) => {
     return {
       AppName: game.name,
-      exe: game.getExePath(true),
+      exe: game.getExePath(),
       StartDir: game.getWorkingDir(),
-      icon: game.getExePath(false),
+      icon: game.getExePath(),
       ShortcutPath: '',
       LaunchOptions: game.getArgs(),
       IsHidden: false,
-      AllowDesktopConfig: false,
+      AllowDesktopConfig: true,
       AllowOverlay: true,
       OpenVR: false,
       DevKit: false,
@@ -74,11 +80,13 @@ app.main = async () => {
   gameShortcuts = {gameShortcuts};
 
   // Write shortcuts
-  /* shortcuts.writeFile(
-      app.getShortcutsPath, gameShortcuts, app.onShortcutWriteError
-  ); */
+  console.log(`Writing shortcuts file for ${games.length} GOG games`);
+  shortcuts.writeFile(
+      app.getShortcutsPath(), gameShortcuts, app.onShortcutWriteError
+  );
 
-  // Write grid images
+  // Authorize with GOG
+  console.log('Authorizing with gog.com.');
   const gogAuthClient = new OAuth2(app.getGogCredentials());
   let token = app.loadToken(gogAuthClient);
   if (!token) {
@@ -90,7 +98,84 @@ app.main = async () => {
     app.saveGogToken(token);
   }
 
+  // Get all the account's games
+  console.log('Getting game data for your GOG games.');
   const gog = new GogApi();
+  const gogAccountGamesMap = {};
+  let gogAccountGamesPage = 1;
+  let gogAccountGamesTotalPages;
+  do {
+    let body;
+    try {
+      body = await gog.account.getFilteredProducts({
+        auth: token,
+        mediaType: 1,
+        page: gogAccountGamesPage,
+      });
+    } catch (e) {
+      throw e;
+    }
+    if (body.products) {
+      body.products.forEach((product) => {
+        gogAccountGamesMap[product.id] = product;
+      });
+    }
+    gogAccountGamesPage += 1;
+    gogAccountGamesTotalPages = body.totalPages;
+  } while (gogAccountGamesPage <= gogAccountGamesTotalPages);
+
+  // Download game images if they don't exits
+  console.log('Downloading steam GRID images.');
+  try {
+    fs.mkdirSync(path.join(app.getGridImagesPath(), 'originals'));
+  } catch (e) {
+    if (e.code !== 'EEXIST') throw (e);
+  }
+
+  const limiter = new Bottleneck({maxConcurrent: 1, minTime: 1000});
+
+  const gamesToProcess = games.filter((game) => {
+    const steamId = app.generateSteamAppId(game.name, game.getExePath());
+    try {
+      fs.accessSync(path.join(app.getGridImagesPath(), `${steamId}.jpg`));
+      return false;
+    } catch (e) {
+      return true;
+    }
+  });
+
+  gamesToProcess.forEach(async (game) => {
+    const steamId = app.generateSteamAppId(game.name, game.getExePath());
+    const gridPath = app.getGridImagesPath();
+    const gridCachePath = path.join(gridPath, 'originals');
+    const finalImgPath = path.join(gridPath, `${steamId}.jpg`);
+    const imagePath = path.join(gridCachePath, `${game.gameId}.jpg`);
+    let image;
+    try {
+      image = fs.readFileSync(imagePath);
+      console.log(`  Found cached image: ${game.name}`);
+      await sharp(image)
+          .resize(920, 430)
+          .jpeg({quality: 95})
+          .toFile(finalImgPath);
+      return;
+    } catch (e) {
+      // empty
+    }
+
+    const gogGame = gogAccountGamesMap[game.gameId];
+    if (!gogGame) {
+      throw new Error(`${game.name} not found in your GOG account.`);
+    }
+
+    image = await rp(`https:${gogGame.image}.jpg`, {encoding: null});
+    console.log(`  Downloaded image: ${game.name}`);
+    fs.writeFileSync(imagePath, image);
+    await sharp(image)
+        .resize(920, 430)
+        .jpeg({quality: 95})
+        .toFile(finalImgPath);
+  });
 };
 
 /**
@@ -168,6 +253,35 @@ app.getGogCredentials = () => {
 };
 
 /**
+ * Generate an ID for a steam shrtcut to use for naming grid images.
+ * @see https://github.com/Hafas/node-steam-shortcuts
+ * @param {string} name
+ * @param {srting} exe
+ * @return {string} The generated ID.
+ */
+app.generateSteamAppId = function(name, exe) {
+  const crcValue = crc.crc32(`${exe}` + name);
+  let longValue = new Long(crcValue, crcValue, true);
+  longValue = longValue.or(0x80000000);
+  longValue = longValue.shl(32);
+  longValue = longValue.or(0x02000000);
+  return longValue.toString();
+};
+
+/**
+ * Read existing shortcuts from disk
+ * @return {Object} The parsed shortcuts from disk.
+ */
+app.loadShortcuts = function() {
+  const parse = promisify(shortcuts.parseFile);
+  return parse(app.getShortcutsPath(), {
+    autoConvertArrays: true,
+    autoConvertBooleans: true,
+    dateProperties: ['LastPlayTime'],
+  });
+};
+
+/**
  * Generate the shortcuts file path
  * @return {string} The shortcuts file path
  */
@@ -175,6 +289,17 @@ app.getShortcutsPath = () => {
   return path.join(
       app.STEAM_INSTALL_PATH, 'userdata',
       app.STEAM_ID, 'config/shortcuts.vdf'
+  );
+};
+
+/**
+ * Generate the Grid images folder path
+ * @return {string} The grid images folder path
+ */
+app.getGridImagesPath = () => {
+  return path.join(
+      app.STEAM_INSTALL_PATH, 'userdata',
+      app.STEAM_ID, 'config/grid'
   );
 };
 
