@@ -8,7 +8,6 @@ const {promisify} = require('util');
 const inquirer = require('inquirer');
 const OAuth2 = require('client-oauth2');
 const GogApi = require('./lib/gog-api');
-const Bottleneck = require('bottleneck');
 const GogGame = require('./lib/gog-game');
 const rp = require('request-promise-native');
 const shortcuts = require('steam-shortcut-editor');
@@ -42,50 +41,13 @@ app.GOG_GAME_PATH = 'G:/games/_gog';
 /**
  * App entry point
  */
+/* eslint-disable no-console */
 app.main = async () => {
-  const gameDirs = fs.readdirSync(app.GOG_GAME_PATH)
-      .filter((dirName) => {
-        const dirPath = path.join(app.GOG_GAME_PATH, dirName);
-        return fs.statSync(dirPath).isDirectory();
-      });
+  const games = app.getGogGames(app.GOG_GAME_PATH);
 
-  const games = [];
-  gameDirs.forEach((dirName) => {
-    const dirPath = path.join(app.GOG_GAME_PATH, dirName);
-    try {
-      games.push(new GogGame(dirPath));
-    } catch (e) {
-      // A non-game directory
-    }
-  });
-
-  let gameShortcuts = games.map((game) => {
-    return {
-      AppName: game.name,
-      exe: game.getExePath(),
-      StartDir: game.getWorkingDir(),
-      icon: game.getExePath(),
-      ShortcutPath: '',
-      LaunchOptions: game.getArgs(),
-      IsHidden: false,
-      AllowDesktopConfig: true,
-      AllowOverlay: true,
-      OpenVR: false,
-      DevKit: false,
-      DevKitGameID: '',
-      LastPlayTime: 0,
-      tags: ['GOG'],
-    };
-  });
-  gameShortcuts = {gameShortcuts};
-
-  // Write shortcuts
   console.log(`Writing shortcuts file for ${games.length} GOG games`);
-  shortcuts.writeFile(
-      app.getShortcutsPath(), gameShortcuts, app.onShortcutWriteError
-  );
+  await app.saveShortcuts(games);
 
-  // Authorize with GOG
   console.log('Authorizing with gog.com.');
   const gogAuthClient = new OAuth2(app.getGogCredentials());
   let token = app.loadToken(gogAuthClient);
@@ -98,7 +60,6 @@ app.main = async () => {
     app.saveGogToken(token);
   }
 
-  // Get all the account's games
   console.log('Getting game data for your GOG games.');
   const gog = new GogApi();
   const gogAccountGamesMap = {};
@@ -124,15 +85,12 @@ app.main = async () => {
     gogAccountGamesTotalPages = body.totalPages;
   } while (gogAccountGamesPage <= gogAccountGamesTotalPages);
 
-  // Download game images if they don't exits
   console.log('Downloading steam GRID images.');
   try {
     fs.mkdirSync(path.join(app.getGridImagesPath(), 'originals'));
   } catch (e) {
     if (e.code !== 'EEXIST') throw (e);
   }
-
-  const limiter = new Bottleneck({maxConcurrent: 1, minTime: 1000});
 
   const gamesToProcess = games.filter((game) => {
     const steamId = app.generateSteamAppId(game.name, game.getExePath());
@@ -176,6 +134,30 @@ app.main = async () => {
         .jpeg({quality: 95})
         .toFile(finalImgPath);
   });
+};
+/* eslint-enable no-console */
+
+/**
+ * Get GOG games
+ * @param {string} gamePath GOG games install dir.
+ * @return {[GogGame]}
+ */
+app.getGogGames = function(gamePath) {
+  const gameDirs = fs.readdirSync(gamePath)
+      .filter((dirName) => {
+        const dirPath = path.join(gamePath, dirName);
+        return fs.statSync(dirPath).isDirectory();
+      });
+  const games = [];
+  gameDirs.forEach((dirName) => {
+    const dirPath = path.join(gamePath, dirName);
+    try {
+      games.push(new GogGame(dirPath));
+    } catch (e) {
+      // A non-game directory
+    }
+  });
+  return games;
 };
 
 /**
@@ -259,7 +241,7 @@ app.getGogCredentials = () => {
  * @param {srting} exe
  * @return {string} The generated ID.
  */
-app.generateSteamAppId = function(name, exe) {
+app.generateSteamAppId = (name, exe) => {
   const crcValue = crc.crc32(`${exe}` + name);
   let longValue = new Long(crcValue, crcValue, true);
   longValue = longValue.or(0x80000000);
@@ -269,10 +251,41 @@ app.generateSteamAppId = function(name, exe) {
 };
 
 /**
+ * Save shortcuts to disk
+ * @param {[GogGame]} games The games to save to shortcuts.
+ */
+app.saveShortcuts = async (games) => {
+  const oldShortcuts = (await app.loadShortcuts()).shortcuts;
+  const oldShortcutsMap = app.arrayToObj(oldShortcuts, (x) => x.exe);
+  const gameShortcuts = games.map((game) => {
+    const oldShortcut = oldShortcutsMap[game.getExePath()] || {};
+    return {
+      AppName: game.name,
+      exe: game.getExePath(),
+      StartDir: game.getWorkingDir(),
+      icon: game.getExePath(),
+      ShortcutPath: '',
+      LaunchOptions: game.getArgs(),
+      IsHidden: false,
+      AllowDesktopConfig: true,
+      AllowOverlay: true,
+      OpenVR: false,
+      DevKit: false,
+      DevKitGameID: '',
+      LastPlayTime: oldShortcut.LastPlayTime || 0,
+      tags: ['GOG'],
+    };
+  });
+  shortcuts.writeFile(
+      app.getShortcutsPath(), {gameShortcuts}, app.onShortcutWriteError
+  );
+};
+
+/**
  * Read existing shortcuts from disk
  * @return {Object} The parsed shortcuts from disk.
  */
-app.loadShortcuts = function() {
+app.loadShortcuts = () => {
   const parse = promisify(shortcuts.parseFile);
   return parse(app.getShortcutsPath(), {
     autoConvertArrays: true,
@@ -313,5 +326,19 @@ app.onShortcutWriteError = (error) => {
   }
 };
 
+/**
+ * Convert an array to an boject with key derived by the callback provided.
+ * The callback is called with the array element as the only parameter.
+ * @param {[*]} array
+ * @param {Function} keyFunction
+ * @return {Object}
+ */
+app.arrayToObj = (array, keyFunction) => {
+  const object = {};
+  array.forEach(function(element) {
+    object[keyFunction(element)] = element;
+  });
+  return object;
+};
 
 app.main();
