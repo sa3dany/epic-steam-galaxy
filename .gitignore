@@ -1,2 +1,4 @@
 node_modules
 .gogrc.json
+__pycache__
+credentials.json

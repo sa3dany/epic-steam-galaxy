@@ -1,0 +1,15 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+gogapi = {git = "https://github.com/Yepoleb/pygogapi.git"}
+vdf = {git = "https://github.com/sa3dany/vdf.git"}
+python-resize-image = "*"
+pillow = "*"
+
+[requires]
+python_version = "3.7"
