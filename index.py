@@ -89,8 +89,11 @@ def image_to_grid(image_path, ouput_image_path):
 
 
 games = get_gog_games('G:/games/_gog')
+print(f'Found {len(games)} installed games.')
 
 shortcuts = load_shortcuts('000000000')
+print(f'Parsed existing shortcuts.vdf')
+
 new_shortcuts = dict(shortcuts={})
 for i, game in enumerate(games):
     last_play_time = 0
@@ -117,6 +120,7 @@ for i, game in enumerate(games):
 del i, game
 
 save_shortcuts('000000000', new_shortcuts)
+print('Saved new shortcuts.vdf\n')
 
 try:
     token = gogapi.Token.from_file('.gogrc.json')
@@ -165,6 +169,7 @@ while True:
     if gog_games_page > gog_games_total_pages:
         break
 del gog_api, gog_games_page, gog_games_total_pages, url, body
+print(f'Found {len(gog_games)} GOG games in your account.\n')
 
 try:
     os.mkdir(os.path.join(get_grid_images_path('000000000'), 'gog'))
@@ -179,11 +184,11 @@ for game in games:
     gog_game = gog_games.get(game.id, None)
 
     if Path(grid_image_path).is_file():
-        print(f'Grid found for {game.name}')
+        print(f'Grid exists. Skipping {game.name}')
         continue
 
     if Path(download_path).is_file():
-        print(f'Grid cache found for {game.name}')
+        print(f'Added grid from cache for {game.name}')
         image_to_grid(download_path, grid_image_path)
         continue
 
@@ -191,7 +196,7 @@ for game in games:
         print(f'{game.name} not found in your GOG account.')
         continue
 
-    print(f'Downloading cover for {game.name}')
+    print(f'Downloaded grid for {game.name}')
     cover_url = f'https:{gog_game["image"]}.jpg'
     urllib.request.urlretrieve(cover_url, download_path)
     image_to_grid(download_path, grid_image_path)
