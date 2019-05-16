@@ -5,9 +5,9 @@ import webbrowser
 import urllib.parse
 from os import path
 from os import mkdir
-import urllib.request
 from time import sleep
 from pathlib import Path
+from urllib import request
 from binascii import crc32
 
 import vdf
@@ -181,7 +181,6 @@ for game in games:
     steam_id = generate_steam_id(f'"{game.get_exe()}"', game.name)
     grid_image_path = path.join(grid_path, f'{steam_id}.jpg')
     download_path = path.join(grid_path, 'gog', f'{game.id}.jpg')
-    gog_game = gog_games.get(game.id, None)
 
     if Path(grid_image_path).is_file():
         print(f'Grid exists. Skipping {game.name}')
@@ -192,12 +191,12 @@ for game in games:
         image_to_grid(download_path, grid_image_path)
         continue
 
-    if not gog_game:
+    if not game.id in gog_games:
         print(f'{game.name} not found in your GOG account.')
         continue
 
     print(f'Downloaded grid for {game.name}')
-    cover_url = f'https:{gog_game["image"]}.jpg'
-    urllib.request.urlretrieve(cover_url, download_path)
+    cover_url = f'https:{gog_games[game.id]["image"]}.jpg'
+    request.urlretrieve(cover_url, download_path)
     image_to_grid(download_path, grid_image_path)
     sleep(0.5)
