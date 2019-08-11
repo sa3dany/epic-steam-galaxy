@@ -123,8 +123,19 @@ for i, game in enumerate(games):
     new_shortcuts['shortcuts'][str(i)] = new_shortcut
 del i, game
 
+gog_shortcuts_len = len(new_shortcuts) + 1
+for i, shortcut in shortcuts['shortcuts'].items():
+    is_gog_shortcut = False
+    if 'tags' in shortcut:
+        for key, tag in shortcut['tags'].items():
+            if tag == 'GOG':
+                is_gog_shortcut = True
+    if not is_gog_shortcut:
+        print('  - Non-GOG: ' + f'{shortcut["AppName"]}')
+        new_shortcuts['shortcuts'][str(gog_shortcuts_len + int(i))] = shortcut
+
 save_shortcuts('000000000', new_shortcuts)
-print('Saved new shortcuts.vdf\n')
+print('Saved new shortcuts.vdf')
 
 try:
     token = gogapi.Token.from_file('.gogrc.json')
