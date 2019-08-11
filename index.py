@@ -50,7 +50,7 @@ def save_shortcuts(steamId, shortcuts):
     '''Save shortcuts.vdf to disk'''
 
     vdf_file = open(get_shortcuts_path(steamId), 'wb')
-    vdf_bytes = vdf.binary_dumps(shortcuts, utf8=True)
+    vdf_bytes = vdf.binary_dumps(shortcuts)
     bytes_written = vdf_file.write(vdf_bytes)
     if bytes_written != len(vdf_bytes):
         pass
