@@ -43,7 +43,6 @@ def load_shortcuts(steamId: str) -> dict:
 
     vdf_file = open(get_shortcuts_path(steamId), 'rb')
     shortcuts = vdf.binary_loads(vdf_file.read())
-    # return [shortcuts[key] for key in shortcuts]
     return shortcuts
 
 
@@ -89,7 +88,7 @@ def image_to_grid(image_path, ouput_image_path):
 
 
 games = get_gog_games('G:/games/_gog')
-print(f'Found {len(games)} installed games.')
+print(f'Found {len(games)} installed games')
 
 shortcuts = load_shortcuts('280467180')
 print(f'Parsed existing shortcuts.vdf')
@@ -169,7 +168,7 @@ while True:
     if gog_games_page > gog_games_total_pages:
         break
 del gog_api, gog_games_page, gog_games_total_pages, url, body
-print(f'Found {len(gog_games)} GOG games in your account.\n')
+print(f'Found {len(gog_games)} GOG games in your account')
 
 try:
     os.mkdir(os.path.join(get_grid_images_path('280467180'), 'gog'))
@@ -183,19 +182,19 @@ for game in games:
     download_path = path.join(grid_path, 'gog', f'{game.id}.jpg')
 
     if Path(grid_image_path).is_file():
-        print(f'Grid exists. Skipping {game.name}')
+        print(f'  - Grid exists: {game.name}')
         continue
 
     if Path(download_path).is_file():
-        print(f'Added grid from cache for {game.name}')
+        print(f'  - Added grid from cache: {game.name}')
         image_to_grid(download_path, grid_image_path)
         continue
 
     if not game.id in gog_games:
-        print(f'{game.name} not found in your GOG account.')
+        print(f'  - Not in GOG account: {game.name}')
         continue
 
-    print(f'Downloaded grid for {game.name}')
+    print(f'  - Downloaded grid: {game.name}')
     cover_url = f'https:{gog_games[game.id]["image"]}.jpg'
     request.urlretrieve(cover_url, download_path)
     image_to_grid(download_path, grid_image_path)
