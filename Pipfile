@@ -7,7 +7,7 @@ verify_ssl = true
 
 [packages]
 gogapi = {git = "https://github.com/Yepoleb/pygogapi.git"}
-vdf = {git = "https://github.com/sa3dany/vdf.git"}
+vdf = {git = "https://github.com/ValvePython/vdf"}
 python-resize-image = "*"
 pillow = "*"
 
