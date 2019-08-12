@@ -96,10 +96,12 @@ new_shortcuts = dict(shortcuts={})
 for i, game in enumerate(games):
     last_play_time = 0
     for key, shortcut in shortcuts['shortcuts'].items():
-        if unquote(shortcut['Exe']) == game.get_exe():
+        if (unquote(shortcut['Exe']) == game.get_exe()
+            or shortcut['AppName'] == game.name
+            or shortcut['DevKitGameID'] == game.id):
             last_play_time = shortcut['LastPlayTime']
-            if last_play_time > 0:
-                print(f'  - Restored LastPlayTime: {shortcut["AppName"]}')
+    if last_play_time > 0:
+        print(f'  - Restored LastPlayTime: {shortcut["AppName"]}')
     new_shortcut = {
         'AppName': game.name,
         'Exe': quote_string(game.get_exe()),
