@@ -87,6 +87,10 @@ def image_to_grid(image_path, ouput_image_path):
             grid.save(ouput_image_path, image.format)
 
 
+print('----------------------------------------')
+print('Generating new shortcuts.vdf')
+print('----------------------------------------')
+
 games = get_gog_games('G:/games/_gog')
 print(f'Found {len(games)} installed games')
 
@@ -130,11 +134,15 @@ for i, shortcut in shortcuts['shortcuts'].items():
             if tag == 'GOG':
                 is_gog_shortcut = True
     if not is_gog_shortcut:
-        print('  - Non-GOG: ' + f'{shortcut["AppName"]}')
+        print('  ☐ Non-GOG: ' + f'{shortcut["AppName"]}')
         new_shortcuts['shortcuts'][str(gog_shortcuts_len + int(i))] = shortcut
 
 save_shortcuts('280467180', new_shortcuts)
-print('Saved new shortcuts.vdf')
+print('Saved new shortcuts.vdf\n')
+
+print('----------------------------------------')
+print('Applying GRID images')
+print('----------------------------------------')
 
 try:
     token = gogapi.Token.from_file('.gogrc.json')
@@ -197,7 +205,6 @@ for game in games:
     download_path = path.join(grid_path, 'gog', f'{game.id}.jpg')
 
     if Path(grid_image_path).is_file():
-        print(f'  - Grid exists: {game.name}')
         continue
 
     if Path(download_path).is_file():
