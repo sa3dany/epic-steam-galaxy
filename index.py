@@ -5,6 +5,7 @@ import webbrowser
 import urllib.parse
 from os import path
 from os import mkdir
+from os import getenv
 from time import sleep
 from pathlib import Path
 from urllib import request
@@ -28,6 +29,20 @@ def get_gog_games(path):
         if not game.is_dlc:
             games.append(game)
     return games
+
+
+def get_galaxy_path():
+    '''Get the GOG Galaxy client install path'''
+
+    programfiles = os.getenv('programfiles(x86)')
+    return os.path.join(programfiles, 'GOG Galaxy')
+
+
+def get_galaxy_exe():
+    '''Get the GOG Galaxy client exe path'''
+
+    programfiles = os.getenv('programfiles(x86)')
+    return os.path.join(programfiles, 'GOG Galaxy', 'GalaxyClient.exe')
 
 
 def get_shortcuts_path(steamId):
@@ -69,12 +84,15 @@ def get_grid_images_path(steamId):
             f'/{steamId}/config/grid')
 
 
-def generate_steam_id(exe, name):
+def generate_steam_id(game, galaxy=False):
     '''Generate an ID for a steam shrtcut to use for naming grid images.
     https://github.com/Hafas/node-steam-shortcuts
     '''
 
-    input_string = ''.join([exe, name])
+    if galaxy:
+        input_string = f'"{get_galaxy_exe()}"{game.name}'
+    else:
+        input_string = f'"{game.get_exe()}"{game.name}'
     top_32 = crc32(input_string.encode()) | 0x80000000
     full_64 = (top_32 << 32) | 0x02000000
     return str(full_64)
@@ -85,6 +103,35 @@ def image_to_grid(image_path, ouput_image_path):
         with Image.open(f) as image:
             grid = resizeimage.resize_cover(image, [920, 430])
             grid.save(ouput_image_path, image.format)
+
+
+def make_shortcut(game, galaxy=False):
+    if galaxy:
+        exe = quote_string(get_galaxy_exe())
+        pwd = quote_string(get_galaxy_path())
+        icon = game.get_exe()
+        args = game.get_galaxy_args()
+    else:
+        exe = quote_string(game.get_exe())
+        pwd = quote_string(game.get_pwd())
+        icon = ''
+        args = game.get_args()
+    return {
+        'AppName': game.name,
+        'Exe': exe,
+        'StartDir': pwd,
+        'icon': icon,
+        'ShortcutPath': '',
+        'LaunchOptions': args,
+        'IsHidden': int(False),
+        'AllowDesktopConfig': int(True),
+        'AllowOverlay': int(True),
+        'OpenVR': int(False),
+        'DevKit': int(False),
+        'DevKitGameID': game.id,
+        'LastPlayTime': 0,
+        'tags': dict([('0', 'GOG')]),
+    }
 
 
 print('----------------------------------------')
@@ -105,24 +152,10 @@ for i, game in enumerate(games):
             or shortcut['AppName'] == game.name
             or shortcut['DevKitGameID'] == game.id):
             last_play_time = shortcut['LastPlayTime']
+    new_shortcut = make_shortcut(game, galaxy=True)
     if last_play_time > 0:
-        print(f'  - Restored LastPlayTime: {shortcut["AppName"]}')
-    new_shortcut = {
-        'AppName': game.name,
-        'Exe': quote_string(game.get_exe()),
-        'StartDir': quote_string(game.get_pwd()),
-        'icon': '',
-        'ShortcutPath': '',
-        'LaunchOptions': game.get_args(),
-        'IsHidden': int(False),
-        'AllowDesktopConfig': int(True),
-        'AllowOverlay': int(True),
-        'OpenVR': int(False),
-        'DevKit': int(False),
-        'DevKitGameID': game.id,
-        'LastPlayTime': last_play_time,
-        'tags': dict([('0', 'GOG')]),
-    }
+        new_shortcut['LastPlayTime'] = last_play_time
+        print(f'  ☑ Restored LastPlayTime: {shortcut["AppName"]}')
     new_shortcuts['shortcuts'][str(i)] = new_shortcut
 del i, game
 
@@ -200,7 +233,7 @@ except FileExistsError:
 
 for game in games:
     grid_path = get_grid_images_path('280467180')
-    steam_id = generate_steam_id(f'"{game.get_exe()}"', game.name)
+    steam_id = generate_steam_id(game, galaxy=True)
     grid_image_path = path.join(grid_path, f'{steam_id}.jpg')
     download_path = path.join(grid_path, 'gog', f'{game.id}.jpg')
 
