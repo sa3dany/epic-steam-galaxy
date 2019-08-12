@@ -55,11 +55,10 @@ class GogGame:
         iconFile = 'goggame-' + self.id + '.ico'
         return path.join(self._path, iconFile)
 
-    def get_run_command(self):
+    def get_galaxy_args(self):
         """Get the commandline arguments to lauch the game through GOG
         Galaxy.
         """
 
-        return ('/command=runGame' +
-                ' /gameId=' + self.id +
-                ' /path="' + self.get_pwd() + '"')
+        return ('/command=runGame'
+                + f' /gameId={self.id} /path="{self.get_pwd()}"')
