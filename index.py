@@ -59,6 +59,10 @@ def quote_string(string):
     return '"' + string + '"'
 
 
+def unquote_string(quoted_string):
+    return quoted_string[1:-1]
+
+
 def get_grid_images_path(steamId):
     '''Generate the Grid images folder path'''
     return ('C:/Program Files (x86)/Steam/userdata'
@@ -82,9 +86,6 @@ def image_to_grid(image_path, ouput_image_path):
             grid = resizeimage.resize_cover(image, [920, 430])
             grid.save(ouput_image_path, image.format)
 
-def unquote(quoted_string):
-    return quoted_string[1:-1]
-
 
 games = get_gog_games('G:/games/_gog')
 print(f'Found {len(games)} installed games')
@@ -96,7 +97,7 @@ new_shortcuts = dict(shortcuts={})
 for i, game in enumerate(games):
     last_play_time = 0
     for key, shortcut in shortcuts['shortcuts'].items():
-        if (unquote(shortcut['Exe']) == game.get_exe()
+        if (unquote_string(shortcut['Exe']) == game.get_exe()
             or shortcut['AppName'] == game.name
             or shortcut['DevKitGameID'] == game.id):
             last_play_time = shortcut['LastPlayTime']
