@@ -15,7 +15,6 @@ import gogapi
 from PIL import Image
 from resizeimage import resizeimage
 
-import crc
 from goggame import GogGame
 
 
@@ -71,11 +70,8 @@ def generate_steam_id(exe, name):
     https://github.com/Hafas/node-steam-shortcuts
     '''
 
-    algorithm = crc.Crc(width=32, poly=0x04C11DB7, reflect_in=True,
-                        xor_in=0xffffffff, reflect_out=True,
-                        xor_out=0xffffffff)
     input_string = ''.join([exe, name])
-    top_32 = algorithm.bit_by_bit(input_string) | 0x80000000
+    top_32 = crc32(input_string.encode()) | 0x80000000
     full_64 = (top_32 << 32) | 0x02000000
     return str(full_64)
 
