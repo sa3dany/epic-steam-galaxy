@@ -112,7 +112,7 @@ for i, game in enumerate(games):
         'AllowOverlay': int(True),
         'OpenVR': int(False),
         'DevKit': int(False),
-        'DevKitGameID': '',
+        'DevKitGameID': game.id,
         'LastPlayTime': last_play_time,
         'tags': dict([('0', 'GOG')]),
     }
