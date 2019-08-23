@@ -152,7 +152,7 @@ for i, game in enumerate(games):
             or shortcut['AppName'] == game.name
             or shortcut['DevKitGameID'] == game.id):
             last_play_time = shortcut['LastPlayTime']
-    new_shortcut = make_shortcut(game, galaxy=True)
+    new_shortcut = make_shortcut(game, galaxy=False)
     if last_play_time > 0:
         new_shortcut['LastPlayTime'] = last_play_time
         print(f'  ☑ Restored LastPlayTime: {shortcut["AppName"]}')
@@ -233,7 +233,7 @@ except FileExistsError:
 
 for game in games:
     grid_path = get_grid_images_path('000000000')
-    steam_id = generate_steam_id(game, galaxy=True)
+    steam_id = generate_steam_id(game, galaxy=False)
     grid_image_path = path.join(grid_path, f'{steam_id}.jpg')
     download_path = path.join(grid_path, 'gog', f'{game.id}.jpg')
 
