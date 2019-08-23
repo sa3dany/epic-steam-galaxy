@@ -144,33 +144,28 @@ print(f'Found {len(games)} installed games')
 shortcuts = load_shortcuts('000000000')
 print(f'Parsed existing shortcuts.vdf')
 
-new_shortcuts = dict(shortcuts={})
+new_shortcuts = {}
+
 for i, game in enumerate(games):
-    last_play_time = 0
-    for key, shortcut in shortcuts['shortcuts'].items():
+    new_shortcut = make_shortcut(game, galaxy=False)
+    new_shortcuts[str(i)] = new_shortcut
+
+    for shortcut in shortcuts['shortcuts'].values():
         if (unquote_string(shortcut['Exe']) == game.get_exe()
             or shortcut['AppName'] == game.name
             or shortcut['DevKitGameID'] == game.id):
-            last_play_time = shortcut['LastPlayTime']
-    new_shortcut = make_shortcut(game, galaxy=False)
-    if last_play_time > 0:
-        new_shortcut['LastPlayTime'] = last_play_time
-        print(f'  ☑ Restored LastPlayTime: {shortcut["AppName"]}')
-    new_shortcuts['shortcuts'][str(i)] = new_shortcut
+            if shortcut.get('LastPlayTime', 0) > 0:
+                new_shortcut['LastPlayTime'] = shortcut['LastPlayTime']
+                print(f'  ☑ Restored LastPlayTime: {shortcut["AppName"]}')
 del i, game
 
-gog_shortcuts_len = len(new_shortcuts) + 1
-for i, shortcut in shortcuts['shortcuts'].items():
-    is_gog_shortcut = False
-    if 'tags' in shortcut:
-        for key, tag in shortcut['tags'].items():
-            if tag == 'GOG':
-                is_gog_shortcut = True
-    if not is_gog_shortcut:
-        print('  ☐ Non-GOG: ' + f'{shortcut["AppName"]}')
-        new_shortcuts['shortcuts'][str(gog_shortcuts_len + int(i))] = shortcut
+for shortcut in shortcuts['shortcuts'].values():
+    if 'GOG' in shortcut['tags'].values():
+        continue
+    new_shortcuts[str(len(new_shortcuts))] = shortcut
+    print('  ☐ Non-GOG: ' + f'{shortcut["AppName"]}')
 
-save_shortcuts('000000000', new_shortcuts)
+save_shortcuts('000000000', {'shortcuts': new_shortcuts})
 print('Saved new shortcuts.vdf\n')
 
 print('----------------------------------------')
