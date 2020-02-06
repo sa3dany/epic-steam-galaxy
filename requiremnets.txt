@@ -1,0 +1,5 @@
+# gogapi
+git+git://github.com/Yepoleb/pygogapi.git@f1b3a81#gogapi
+
+python-resize-image ~= 1.1.19
+vdf ~= 3.2
