@@ -130,7 +130,7 @@ def make_shortcut(game, galaxy=False):
         'DevKit': int(False),
         'DevKitGameID': game.id,
         'LastPlayTime': 0,
-        'tags': dict([('0', 'GOG.com')]),
+        'tags': dict([('0', 'GOG')]),
     }
 
 
@@ -153,14 +153,14 @@ for i, game in enumerate(games):
     for shortcut in shortcuts['shortcuts'].values():
         if (unquote_string(shortcut['Exe']) == game.get_exe()
             or shortcut['AppName'] == game.name
-            or shortcut.get('DevKitGameID', None) == game.id):
+            or shortcut['DevKitGameID'] == game.id):
             if shortcut.get('LastPlayTime', 0) > 0:
                 new_shortcut['LastPlayTime'] = shortcut['LastPlayTime']
                 print(f'  ☑ Restored LastPlayTime: {shortcut["AppName"]}')
 del i, game
 
 for shortcut in shortcuts['shortcuts'].values():
-    if 'GOG.com' in shortcut['tags'].values():
+    if 'GOG' in shortcut['tags'].values():
         continue
     new_shortcuts[str(len(new_shortcuts))] = shortcut
     print('  ☐ Non-GOG: ' + f'{shortcut["AppName"]}')
