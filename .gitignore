@@ -3,4 +3,5 @@ node_modules
 __pycache__
 credentials.json
 .venv
+.vscode
 
