@@ -95,7 +95,7 @@ def generate_steam_id(game, galaxy=False):
         input_string = f'"{game.get_exe()}"{game.name}'
     top_32 = crc32(input_string.encode()) | 0x80000000
     full_64 = (top_32 << 32) | 0x02000000
-    return str(full_64)
+    return str(top_32) + 'p'
 
 
 def image_to_grid(image_path, ouput_image_path):
