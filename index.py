@@ -127,8 +127,8 @@ def make_shortcut(game, galaxy=False):
         'AllowDesktopConfig': int(True),
         'AllowOverlay': int(True),
         'OpenVR': int(False),
-        'DevKit': int(False),
-        'DevKitGameID': game.id,
+        'Devkit': int(False),
+        'DevkitGameID': game.id,
         'LastPlayTime': 0,
         'tags': dict([('0', 'GOG')]),
     }
@@ -153,7 +153,7 @@ for i, game in enumerate(games):
     for shortcut in shortcuts['shortcuts'].values():
         if (unquote_string(shortcut['Exe']) == game.get_exe()
             or shortcut['AppName'] == game.name
-            or shortcut['DevKitGameID'] == game.id):
+            or shortcut['DevkitGameID'] == game.id):
             if shortcut.get('LastPlayTime', 0) > 0:
                 new_shortcut['LastPlayTime'] = shortcut['LastPlayTime']
                 print(f'  ☑ Restored LastPlayTime: {shortcut["AppName"]}')
