@@ -55,8 +55,11 @@ def get_shortcuts_path(steamId):
 def load_shortcuts(steamId: str) -> dict:
     '''Load shortcuts.vdf from disk.'''
 
-    vdf_file = open(get_shortcuts_path(steamId), 'rb')
-    shortcuts = vdf.binary_loads(vdf_file.read())
+    try:
+        vdf_file = open(get_shortcuts_path(steamId), 'rb')
+        shortcuts = vdf.binary_loads(vdf_file.read())
+    except FileNotFoundError:
+        shortcuts = {'shortcuts': {}}
     return shortcuts
 
 
