@@ -56,7 +56,7 @@ class GogGame:
         return path.join(self._path, iconFile)
 
     def get_galaxy_args(self):
-        """Get the commandline arguments to lauch the game through GOG
+        """Get the command line arguments to launch the game through GOG
         Galaxy.
         """
 
