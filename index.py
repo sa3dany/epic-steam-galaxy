@@ -9,6 +9,7 @@ from urllib import request
 import gogapi
 
 from any.gog.util import get_gog_games
+from any.epic.core import get_installed as get_epic_installed
 from steam import (
     generate_steam_id,
     get_grid_images_path,
@@ -21,13 +22,20 @@ from util import unquote_string
 
 
 if __name__ == "__main__":
-    games = get_gog_games("C:\Program Files (x86)\GOG Galaxy\Games")
-    print(f"Found {len(games)} [GOG] installed games")
-
     shortcuts = load_shortcuts("000000000")
+    new_shortcuts = {}
     print(f"Parsed existing shortcuts.vdf")
 
-    new_shortcuts = {}
+    # Launcher Games
+    gog_games = get_gog_games("C:\Program Files (x86)\GOG Galaxy\Games")
+    print(f"Found {len(gog_games)} [GOG] installed games")
+
+    epic_games = get_epic_installed()
+    print(f"Found {len(epic_games)} [Epic] installed games")
+
+    games = []
+    games.extend(gog_games)
+    games.extend(epic_games)
 
     for i, game in enumerate(games):
         new_shortcut = make_shortcut(game, galaxy=False)
@@ -43,14 +51,21 @@ if __name__ == "__main__":
                     new_shortcut["LastPlayTime"] = shortcut["LastPlayTime"]
                     print(f'  ☑ Restored LastPlayTime: {shortcut["AppName"]}')
 
+    # Custom (user-created) shortcuts
+    # Keep them at the end, don't modify them
     for shortcut in shortcuts["shortcuts"].values():
         if "GOG" in shortcut["tags"].values():
+            continue
+        if "EPIC" in shortcut["tags"].values():
             continue
         new_shortcuts[str(len(new_shortcuts))] = shortcut
         print("  ☐ Non-GOG: " + f'{shortcut["AppName"]}')
 
+    # Save updated shortcuts
     save_shortcuts("000000000", {"shortcuts": new_shortcuts})
     print("Saved new shortcuts.vdf")
+
+    exit(0)
 
     try:
         token = gogapi.Token.from_file(".gogrc.json")
