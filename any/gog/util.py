@@ -22,10 +22,3 @@ def get_galaxy_path():
 
     programfiles = getenv("programfiles(x86)")
     return path.join(programfiles, "GOG Galaxy")
-
-
-def get_galaxy_exe():
-    """Get the GOG Galaxy client exe path"""
-
-    programfiles = getenv("programfiles(x86)")
-    return path.join(programfiles, "GOG Galaxy", "GalaxyClient.exe")

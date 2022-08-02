@@ -39,32 +39,29 @@ def get_grid_images_path(steamId):
     return "C:/Program Files (x86)/Steam/userdata" f"/{steamId}/config/grid"
 
 
-def generate_steam_id(game, galaxy=False):
+def generate_steam_id(exe, name):
     """Generate an ID for a steam shortcut to use for naming grid images.
+    The format of the string used to generate the ID used by Steam is:
+    "{game_exe_path}"{game_name}
+
+    Notice that the game_exe_path is quoted.
+
     https://github.com/Hafas/node-steam-shortcuts
     """
 
-    # if galaxy:
-    #     input_string = f'"{get_galaxy_exe()}"{game.name}'
-    # else:
-    input_string = f'"{game.get_exe()}"{game.name}'
+    input_string = f'"{exe}"{name}'
     top_32 = crc32(input_string.encode()) | 0x80000000
     return str(top_32) + "p"
 
 
-def make_shortcut(game, galaxy=False):
-    # if galaxy:
-    #     exe = quote_string(get_galaxy_exe())
-    #     pwd = quote_string(get_galaxy_path())
-    #     icon = game.get_exe()
-    #     args = game.get_galaxy_args()
-    # else:
-    exe = quote_string(game.get_exe())
-    pwd = quote_string(game.get_pwd())
-    icon = ""
-    args = game.get_args()
+def make_shortcut(
+    id=None, exe=None, args=None, pwd=None, name=None, icon=None, tag=None
+):
+    exe = quote_string(exe)
+    pwd = quote_string(pwd)
+    args = args
     return {
-        "AppName": game.name,
+        "AppName": name,
         "Exe": exe,
         "StartDir": pwd,
         "icon": icon,
@@ -75,9 +72,9 @@ def make_shortcut(game, galaxy=False):
         "AllowOverlay": int(True),
         "OpenVR": int(False),
         "Devkit": int(False),
-        "DevkitGameID": game.id,
+        "DevkitGameID": id,
         "LastPlayTime": 0,
-        "tags": dict([("0", "GOG")]),
+        "tags": dict([("0", tag)]) if tag else {},
     }
 
 

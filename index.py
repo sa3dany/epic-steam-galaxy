@@ -23,7 +23,6 @@ from util import unquote_string
 
 if __name__ == "__main__":
     shortcuts = load_shortcuts("000000000")
-    new_shortcuts = {}
     print(f"Parsed existing shortcuts.vdf")
 
     # Launcher Games
@@ -37,8 +36,17 @@ if __name__ == "__main__":
     games.extend(gog_games)
     games.extend(epic_games)
 
+    new_shortcuts = {}
     for i, game in enumerate(games):
-        new_shortcut = make_shortcut(game, galaxy=False)
+        new_shortcut = make_shortcut(
+            id=game.id,
+            exe=game.get_launcher_exe(),
+            args=game.get_launcher_args(),
+            pwd=game.get_pwd(),
+            name=game.name,
+            icon=game.get_exe(),
+            tag=game.type,
+        )
         new_shortcuts[str(i)] = new_shortcut
 
         for shortcut in shortcuts["shortcuts"].values():
@@ -125,7 +133,7 @@ if __name__ == "__main__":
 
     for game in games:
         grid_path = get_grid_images_path("000000000")
-        steam_id = generate_steam_id(game, galaxy=False)
+        steam_id = generate_steam_id(game.get_exe(), game.name, galaxy=False)
         grid_image_path = path.join(grid_path, f"{steam_id}.jpg")
         download_path = path.join(grid_path, "gog", f"{game.id}.jpg")
 
