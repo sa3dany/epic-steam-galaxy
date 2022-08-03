@@ -8,8 +8,8 @@ from urllib import request
 
 import gogapi
 
-from any.gog.util import get_gog_games
-from any.epic.core import get_installed as get_epic_installed
+from any.gog import get_gog_games
+from any.epic import get_installed as get_epic_installed
 from steam import (
     generate_steam_id,
     get_grid_images_path,
