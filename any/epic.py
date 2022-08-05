@@ -1,6 +1,7 @@
 import json
-from os import getenv, path
+from os import path
 from pathlib import Path
+from urllib.parse import quote, urlencode
 
 MANIFESTS_DIR = "C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests"
 
@@ -23,21 +24,23 @@ class EpicGame:
         )
 
     def get_launcher_exe(self):
-        """Get the Epic launcher exe path"""
+        """Get the Epic launcher exe path (not really!)
 
-        programfiles = getenv("programfiles(x86)")
-        return path.join(
-            programfiles,
-            "Epic Games",
-            "Launcher",
-            "Portal",
-            "Binaries",
-            "Win64",
-            "EpicGamesLauncher.exe",
-        )
+        I am doing it the way the add desktop works by using the
+        com.epicgames.launcher:// protocol."""
+
+        protocol = "com.epicgames.launcher://"
+        base_path = "apps"
+        namespace = self._manifest["CatalogNamespace"]
+        id = self._manifest["CatalogItemId"]
+        name = self._manifest["AppName"]
+        query = urlencode({"action": "launch", "silent": "true"})
+
+        path = quote(f"{base_path}/{namespace}:{id}:{name}")
+        return f"{protocol}{path}?{query}"
 
     def get_pwd(self):
-        return self._manifest["InstallLocation"]
+        return path.dirname(self.get_exe())
 
     def get_args(self):
         return ""
