@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------
 from platform import system
 
-from click import style
+from click import command, echo, style
 
 from util import echo_error
 
@@ -16,9 +16,19 @@ def is_windows():
 
 
 # ----------------------------------------------------------------------
+# Commands
+# ----------------------------------------------------------------------
+@command()
+def sync_shortcuts():
+    echo("Syncing shortcuts...")
+
+
+# ----------------------------------------------------------------------
 # Main
 # ----------------------------------------------------------------------
 if __name__ == "__main__":
     if not is_windows():
         echo_error(f"Unsupported OS: {style(system(), fg='green')}")
         exit(1)
+
+    sync_shortcuts()
