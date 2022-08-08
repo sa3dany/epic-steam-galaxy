@@ -1,3 +1,7 @@
+# TODO: instead of GOG api use this endpoint:
+# https://www.gog.com/u/WobblyMango/games/stats it only requires a user
+# name
+
 import re
 import urllib.parse
 import webbrowser
