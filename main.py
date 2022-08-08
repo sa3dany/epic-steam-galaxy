@@ -6,7 +6,8 @@ from platform import system
 from click import command, echo, style
 
 from atos import get_installed_games
-from util import echo_error
+from steam import get_profiles_path
+from util import echo_error, echo_info, echo_debug
 
 
 # ----------------------------------------------------------------------
@@ -21,9 +22,23 @@ def is_windows():
 # ----------------------------------------------------------------------
 @command()
 def sync_shortcuts():
-    echo("Syncing shortcuts...")
-    for game in get_installed_games():
-        pass
+    """Sync shortcuts.vdf with installed games"""
+
+    # Get steam's profile path
+    steam_profiles_path = get_profiles_path()
+    if not steam_profiles_path:
+        echo_error("Could not find Steam's profiles path")
+        exit(1)
+
+    echo_info("Started shortcut sync")
+
+    # Get installed games
+    games = get_installed_games()
+
+    for game in games:
+        echo_info(f"{style(game.platform, fg='yellow')} {game.name}")
+        echo_debug(
+            f"{game.id}, {game.exe_path}, {game.args}, {game.icon_path}")
 
 
 # ----------------------------------------------------------------------

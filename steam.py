@@ -1,10 +1,29 @@
+# ----------------------------------------------------------------------
+# Imports
+# ----------------------------------------------------------------------
 from binascii import crc32
+from pathlib import Path
+from posixpath import expandvars
 
-import vdf
 from PIL import Image
 from resizeimage import resizeimage
+from vdf import binary_dumps as vdf_dump
+from vdf import binary_loads as vdf_load
 
 from util import quote_string
+
+
+# ----------------------------------------------------------------------
+# Exports
+# ----------------------------------------------------------------------
+def get_profiles_path():
+    """Get the path to the steam profiles folder."""
+
+    path = expandvars("%ProgramFiles(x86)%\\Steam\\userdata")
+    if not Path(path).exists():
+        return None
+
+    return path
 
 
 def get_shortcuts_path(steamId):
@@ -18,7 +37,7 @@ def load_shortcuts(steamId: str) -> dict:
 
     try:
         vdf_file = open(get_shortcuts_path(steamId), "rb")
-        shortcuts = vdf.binary_loads(vdf_file.read())
+        shortcuts = vdf_load(vdf_file.read())
     except FileNotFoundError:
         shortcuts = {"shortcuts": {}}
     return shortcuts
@@ -28,7 +47,7 @@ def save_shortcuts(steamId, shortcuts):
     """Save shortcuts.vdf to disk"""
 
     vdf_file = open(get_shortcuts_path(steamId), "wb")
-    vdf_bytes = vdf.binary_dumps(shortcuts)
+    vdf_bytes = vdf_dump(shortcuts)
     bytes_written = vdf_file.write(vdf_bytes)
     if bytes_written != len(vdf_bytes):
         pass
@@ -54,9 +73,13 @@ def generate_steam_id(exe, name):
     return str(top_32) + "p"
 
 
-def make_shortcut(
-    id=None, exe=None, args=None, pwd=None, name=None, icon=None, tag=None
-):
+def make_shortcut(id=None,
+                  exe=None,
+                  args=None,
+                  pwd=None,
+                  name=None,
+                  icon=None,
+                  tag=None):
     exe = quote_string(exe)
     pwd = quote_string(pwd)
     args = args
