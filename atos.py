@@ -2,7 +2,7 @@
 # Imports
 # ----------------------------------------------------------------------
 from json import load as json_parse
-from os.path import expandvars, join
+from os.path import expandvars
 from pathlib import Path
 from urllib.parse import quote, urlencode
 
@@ -70,11 +70,11 @@ def _get_installed_gog_games():
         for task in info["playTasks"]:
             if task.get("isPrimary", False):
                 # Use the actual game exe for the icon path
-                icon_path = join(pwd, task["path"])
+                icon_path = info_file.parent / task["path"]
 
                 # if primary task has a pwd use it instead
                 if task.get("workingDir", False):
-                    pwd = join(pwd, task["workingDir"])
+                    pwd = str(info_file.parent / task["workingDir"])
                     break
 
         args = f'/command=runGame /gameId={info["gameId"]} /path="{pwd}"'
@@ -122,8 +122,8 @@ def _get_installed_epic_games():
         launcher_url = f"{protocol}{path}?{query}"
 
         # Prepare icon path
-        icon_path = join(manifest["InstallLocation"],
-                         manifest["LaunchExecutable"])
+        install_path = manifest["InstallLocation"]
+        icon_path = Path(install_path) / manifest["LaunchExecutable"]
 
         game = Game(platform="epic",
                     id=manifest["CatalogItemId"],
