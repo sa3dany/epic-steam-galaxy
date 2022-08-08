@@ -2,8 +2,8 @@
 # Imports
 # ----------------------------------------------------------------------
 from binascii import crc32
+from os.path import expandvars
 from pathlib import Path
-from posixpath import expandvars
 
 from PIL import Image
 from resizeimage import resizeimage
@@ -16,14 +16,35 @@ from util import quote_string
 # ----------------------------------------------------------------------
 # Exports
 # ----------------------------------------------------------------------
-def get_profiles_path():
-    """Get the path to the steam profiles folder."""
+def get_userdata_path():
+    """Get the path to the steam userdata directory."""
 
     path = expandvars("%ProgramFiles(x86)%\\Steam\\userdata")
     if not Path(path).exists():
         return None
 
     return path
+
+
+def get_user_ids(userdata_path):
+    """Get the Steam users (profiles) IDs on the system."""
+
+    if not userdata_path:
+        raise ValueError("Userdata path is required.")
+
+    userdata_path = Path(userdata_path)
+    if not userdata_path.exists():
+        raise ValueError("Userdata path does not exist.")
+    if not userdata_path.is_dir():
+        raise ValueError("Userdata path is not a directory.")
+
+    # filter to just the directories that contain a localconfig.vdf file
+    user_profiles = [
+        x for x in userdata_path.iterdir()
+        if x.is_dir() and (x / "config" / "localconfig.vdf").exists()
+    ]
+
+    return [profile.name for profile in user_profiles]
 
 
 def get_shortcuts_path(steamId):

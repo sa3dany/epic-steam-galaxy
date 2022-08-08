@@ -6,7 +6,7 @@ from platform import system
 from click import command, echo, style
 
 from atos import get_installed_games
-from steam import get_profiles_path
+from steam import get_userdata_path, get_user_ids
 from util import echo_error, echo_info, echo_debug
 
 
@@ -24,13 +24,23 @@ def is_windows():
 def sync_shortcuts():
     """Sync shortcuts.vdf with installed games"""
 
-    # Get steam's profile path
-    steam_profiles_path = get_profiles_path()
-    if not steam_profiles_path:
+    # Get steam's profiles path
+    userdata_path = get_userdata_path()
+    if not userdata_path:
         echo_error("Could not find Steam's profiles path")
         exit(1)
 
-    echo_info("Started shortcut sync")
+    # Get the list of users on the system
+    ids = get_user_ids(userdata_path)
+
+    # if more than one user, error out for now
+    if len(ids) > 1:
+        echo_error("Multiple Steam users are not supported yet")
+        exit(1)
+
+    user_id = ids[0]
+    echo_info(
+        f"Syncing shortcuts for Steam user: {style(user_id, fg='green')}")
 
     # Get installed games
     games = get_installed_games()
