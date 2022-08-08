@@ -5,6 +5,7 @@ from platform import system
 
 from click import command, echo, style
 
+from atos import get_installed_games
 from util import echo_error
 
 
@@ -21,6 +22,8 @@ def is_windows():
 @command()
 def sync_shortcuts():
     echo("Syncing shortcuts...")
+    for game in get_installed_games():
+        pass
 
 
 # ----------------------------------------------------------------------
