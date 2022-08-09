@@ -90,12 +90,9 @@ def create_shortcut(app_name,
     if not exe:
         raise ValueError("An exe path is required.")
 
-    # TODO: find out the appid is generated and if it is the same id
-    # used fot the grid images
-
     # The `Exe`, `StartDir` and other paths must be quoted.
     return {
-        "appid": app_id,
+        "appid": app_id,  # appears to be random
         "AppName": app_name,
         "Exe": f'"{exe}"' if exe else "",
         "StartDir": f'"{start_dir}"' if start_dir else "",
