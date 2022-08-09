@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------
 from platform import system
 
-from click import command, echo, option, style
+from click import echo, group, option, pass_context, style
 
 from atos import get_installed_games
 from steam import (create_shortcut, get_user_ids, get_userdata_path,
@@ -22,13 +22,21 @@ def is_windows():
 # ----------------------------------------------------------------------
 # Commands
 # ----------------------------------------------------------------------
-@command()
+@group()
 @option('--dry-run',
         default=False,
         is_flag=True,
-        help="Don't save any changes to disk")
-def sync_shortcuts(dry_run):
-    """Sync shortcuts.vdf with installed games"""
+        help="Don't save any changes to disk.")
+@pass_context
+def cli(ctx, dry_run):
+    """AtoS: Steam shortcut manager"""
+    ctx.obj = {"dry_run": dry_run}
+
+
+@cli.command()
+@pass_context
+def sync_shortcuts(ctx):
+    """Sync Steam shortcuts with installed games."""
 
     # Get steam's profiles path
     userdata_path = get_userdata_path()
@@ -111,11 +119,18 @@ def sync_shortcuts(dry_run):
         f"{custom_shortcuts_count} custom shortcut(s) found and restored")
 
     # save new shortcuts
-    if not dry_run:
+    if not ctx.obj["dry_run"]:
         save_shortcuts(user_id, {"shortcuts": new_shortcuts})
         echo_info("Saved new shortcuts")
     else:
         echo_info(f"{style('Dry run', fg='red')}: new shortcuts not saved")
+
+
+@cli.command()
+def download_grids():
+    """Download Steam grid images for current shortcuts"""
+
+    pass
 
 
 # ----------------------------------------------------------------------
@@ -126,4 +141,4 @@ if __name__ == "__main__":
         echo_error(f"Unsupported OS: {style(system(), fg='green')}")
         exit(1)
 
-    sync_shortcuts()
+    cli()
