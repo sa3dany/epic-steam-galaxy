@@ -10,8 +10,6 @@ from resizeimage import resizeimage
 from vdf import binary_dumps as vdf_dump
 from vdf import binary_loads as vdf_load
 
-from util import quote_string
-
 
 # ----------------------------------------------------------------------
 # Exports
@@ -64,6 +62,53 @@ def load_shortcuts(steamId: str) -> dict:
     return shortcuts
 
 
+def create_shortcut(app_id,
+                    app_name,
+                    exe,
+                    start_dir="",
+                    icon="",
+                    shortcut_path="",
+                    launch_options="",
+                    is_hidden=False,
+                    allow_desktop_config=True,
+                    allow_overlay=True,
+                    open_vr=False,
+                    devkit=False,
+                    devkit_game_id="",
+                    devkit_override_app_id=False,
+                    last_play_time=0,
+                    tags=[]):
+    """Create a shortcut dictionary for Steam."""
+
+    if not app_id:
+        raise ValueError("app_id is required.")
+    if not app_name:
+        raise ValueError("app_name is required.")
+    if not exe:
+        raise ValueError("An exe path is required.")
+
+    # The `Exe`, `StartDir` and other path field must be quoted.
+    return {
+        "appid": app_id,
+        "AppName": app_name,
+        "Exe": f'"{exe}"' if exe else "",
+        "StartDir": f'"{start_dir}"' if start_dir else "",
+        "icon": f'"{icon}"' if icon else "",
+        "ShortcutPath": f'"{shortcut_path}"' if shortcut_path else "",
+        "LaunchOptions": launch_options,
+        "IsHidden": int(is_hidden),
+        "AllowDesktopConfig": int(allow_desktop_config),
+        "AllowOverlay": int(allow_overlay),
+        "OpenVR": int(open_vr),
+        "Devkit": int(devkit),
+        "DevkitGameID": devkit_game_id,
+        "DevkitOverrideAppID": int(devkit_override_app_id),
+        "LastPlayTime": last_play_time,
+        "tags": {str(i): tags[i]
+                 for i in range(len(tags))} if len(tags) else {},
+    }
+
+
 def save_shortcuts(steamId, shortcuts):
     """Save shortcuts.vdf to disk"""
 
@@ -92,34 +137,6 @@ def generate_steam_id(exe, name):
     input_string = f'"{exe}"{name}'
     top_32 = crc32(input_string.encode()) | 0x80000000
     return str(top_32) + "p"
-
-
-def make_shortcut(id=None,
-                  exe=None,
-                  args=None,
-                  pwd=None,
-                  name=None,
-                  icon=None,
-                  tag=None):
-    exe = quote_string(exe)
-    pwd = quote_string(pwd)
-    args = args
-    return {
-        "AppName": name,
-        "Exe": exe,
-        "StartDir": pwd,
-        "icon": icon,
-        "ShortcutPath": "",
-        "LaunchOptions": args,
-        "IsHidden": int(False),
-        "AllowDesktopConfig": int(True),
-        "AllowOverlay": int(True),
-        "OpenVR": int(False),
-        "Devkit": int(False),
-        "DevkitGameID": id,
-        "LastPlayTime": 0,
-        "tags": dict([("0", tag)]) if tag else {},
-    }
 
 
 def image_to_grid(image_path, output_image_path):
