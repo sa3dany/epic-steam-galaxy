@@ -3,12 +3,13 @@
 # ----------------------------------------------------------------------
 from platform import system
 
-from click import command, echo, style
+from click import command, echo, option, style
 
 from atos import get_installed_games
-from steam import (get_user_ids, get_userdata_path, load_shortcuts,
-                   create_shortcut, save_shortcuts)
-from util import echo_debug, echo_error, echo_info, truncate_default_shortcut_fields
+from steam import (create_shortcut, get_user_ids, get_userdata_path,
+                   load_shortcuts, save_shortcuts)
+from util import (echo_debug, echo_error, echo_info,
+                  truncate_default_shortcut_fields)
 
 
 # ----------------------------------------------------------------------
@@ -22,7 +23,11 @@ def is_windows():
 # Commands
 # ----------------------------------------------------------------------
 @command()
-def sync_shortcuts():
+@option('--dry-run',
+        default=False,
+        is_flag=True,
+        help="Don't save any changes to disk")
+def sync_shortcuts(dry_run):
     """Sync shortcuts.vdf with installed games"""
 
     # Get steam's profiles path
@@ -106,8 +111,11 @@ def sync_shortcuts():
         f"{custom_shortcuts_count} custom shortcut(s) found and restored")
 
     # save new shortcuts
-    save_shortcuts(user_id, {"shortcuts": new_shortcuts})
-    echo_info("Saved new shortcuts")
+    if not dry_run:
+        save_shortcuts(user_id, {"shortcuts": new_shortcuts})
+        echo_info("Saved new shortcuts")
+    else:
+        echo_info(f"{style('Dry run', fg='red')}: new shortcuts not saved")
 
 
 # ----------------------------------------------------------------------
