@@ -66,9 +66,9 @@ def load_shortcuts(steamId: str) -> dict:
     return shortcuts
 
 
-def create_shortcut(app_id,
-                    app_name,
+def create_shortcut(app_name,
                     exe,
+                    app_id="",
                     start_dir="",
                     icon="",
                     shortcut_path="",
@@ -85,14 +85,15 @@ def create_shortcut(app_id,
                     tags=[]):
     """Create a shortcut dictionary for Steam."""
 
-    if not app_id:
-        raise ValueError("app_id is required.")
     if not app_name:
         raise ValueError("app_name is required.")
     if not exe:
         raise ValueError("An exe path is required.")
 
-    # The `Exe`, `StartDir` and other path field must be quoted.
+    # TODO: find out the appid is generated and if it is the same id
+    # used fot the grid images
+
+    # The `Exe`, `StartDir` and other paths must be quoted.
     return {
         "appid": app_id,
         "AppName": app_name,
@@ -122,7 +123,7 @@ def save_shortcuts(steamId, shortcuts):
     vdf_bytes = vdf_dump(shortcuts)
     bytes_written = vdf_file.write(vdf_bytes)
     if bytes_written != len(vdf_bytes):
-        pass
+        raise ValueError("Failed to write all bytes to file.")
 
 
 def get_grid_images_path(steamId):
