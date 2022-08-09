@@ -46,9 +46,10 @@ def sync_shortcuts():
     echo()
 
     # load existing shortcuts
-    shortcuts = load_shortcuts(user_id)
-    echo_info(f"Loaded {len(shortcuts['shortcuts'])} existing shortcut(s)")
-    for i, shortcut in shortcuts['shortcuts'].items():
+    existing_shortcuts = load_shortcuts(user_id)
+    existing_shortcuts = existing_shortcuts["shortcuts"]
+    echo_info(f"Loaded {len(existing_shortcuts)} existing shortcut(s)")
+    for i, shortcut in existing_shortcuts.items():
         echo_debug(f"{i}: {truncate_default_shortcut_fields(shortcut)}")
 
     echo()
@@ -57,18 +58,56 @@ def sync_shortcuts():
     games = get_installed_games()
     echo_info(f"Found {len(games)} installed game(s)")
 
-    for game in games:
+    # prepare new shortcuts dictionary
+    new_shortcuts = {}
+
+    # Build new shortcuts dictionary
+    for i, game in enumerate(games):
         echo_info(f" - {style(game.platform, fg='yellow')} {game.name}")
 
+        # get last play time from existing shortcuts if available
+        last_play_time = 0
+        for shortcut in existing_shortcuts.values():
+            if shortcut['DevkitGameID'] == game.id:
+                saved_last_play_time = shortcut.get("LastPlayTime", 0)
+                if saved_last_play_time > 0:
+                    last_play_time = saved_last_play_time
+                    echo_debug(
+                        f"Last play time restored for {style(game.name, fg='green')}"
+                    )
+                    break
+
         # create shortcut
-        game_shortcut = create_shortcut(game.id,
-                                        game.name,
+        game_shortcut = create_shortcut(game.name,
                                         game.exe_path,
                                         icon=game.icon_path,
                                         launch_options=game.args,
+                                        devkit_game_id=game.id,
+                                        last_play_time=last_play_time,
                                         tags=[game.platform])
-
         echo_debug(f"{truncate_default_shortcut_fields(game_shortcut)}")
+
+        # add to new shortcuts dictionary
+        new_shortcuts[str(i)] = game_shortcut
+
+    echo()
+
+    # handle custom (user-created) shortcuts
+    # Keep them as-is at the end of the list
+    custom_shortcuts_count = 0
+    for shortcut in existing_shortcuts.values():
+        if shortcut['DevkitGameID'] not in [game.id for game in games]:
+            new_shortcuts[str(len(new_shortcuts))] = shortcut
+            custom_shortcuts_count += 1
+            echo_debug(
+                f"Custom shortcut for {style(shortcut['AppName'], fg='green')} added"
+            )
+    echo_info(
+        f"{custom_shortcuts_count} custom shortcut(s) found and restored")
+
+    # save new shortcuts
+    save_shortcuts(user_id, {"shortcuts": new_shortcuts})
+    echo_info("Saved new shortcuts")
 
 
 # ----------------------------------------------------------------------
