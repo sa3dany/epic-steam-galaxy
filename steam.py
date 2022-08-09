@@ -77,6 +77,7 @@ def create_shortcut(app_id,
                     devkit_game_id="",
                     devkit_override_app_id=False,
                     last_play_time=0,
+                    flatpak_app_id="",
                     tags=[]):
     """Create a shortcut dictionary for Steam."""
 
@@ -104,6 +105,7 @@ def create_shortcut(app_id,
         "DevkitGameID": devkit_game_id,
         "DevkitOverrideAppID": int(devkit_override_app_id),
         "LastPlayTime": last_play_time,
+        "FlatpakAppID": flatpak_app_id,
         "tags": {str(i): tags[i]
                  for i in range(len(tags))} if len(tags) else {},
     }
