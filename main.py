@@ -8,7 +8,7 @@ from click import command, echo, style
 from atos import get_installed_games
 from steam import (get_user_ids, get_userdata_path, load_shortcuts,
                    create_shortcut, save_shortcuts)
-from util import echo_debug, echo_error, echo_info
+from util import echo_debug, echo_error, echo_info, truncate_default_shortcut_fields
 
 
 # ----------------------------------------------------------------------
@@ -43,13 +43,22 @@ def sync_shortcuts():
     echo_info(
         f"Syncing shortcuts for Steam user: {style(user_id, fg='green')}")
 
+    echo()
+
+    # load existing shortcuts
+    shortcuts = load_shortcuts(user_id)
+    echo_info(f"Loaded {len(shortcuts['shortcuts'])} existing shortcut(s)")
+    for i, shortcut in shortcuts['shortcuts'].items():
+        echo_debug(f"{i}: {truncate_default_shortcut_fields(shortcut)}")
+
+    echo()
+
     # Get installed games
     games = get_installed_games()
+    echo_info(f"Found {len(games)} installed game(s)")
 
     for game in games:
-        echo_info(f"{style(game.platform, fg='yellow')} {game.name}")
-        echo_debug(
-            f"{game.id}, {game.exe_path}, {game.args}, {game.icon_path}")
+        echo_info(f" - {style(game.platform, fg='yellow')} {game.name}")
 
         # create shortcut
         game_shortcut = create_shortcut(game.id,
@@ -59,7 +68,7 @@ def sync_shortcuts():
                                         launch_options=game.args,
                                         tags=[game.platform])
 
-        echo_debug(f"{game_shortcut}")
+        echo_debug(f"{truncate_default_shortcut_fields(game_shortcut)}")
 
 
 # ----------------------------------------------------------------------
