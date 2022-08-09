@@ -6,8 +6,9 @@ from platform import system
 from click import command, echo, style
 
 from atos import get_installed_games
-from steam import get_userdata_path, get_user_ids
-from util import echo_error, echo_info, echo_debug
+from steam import (get_user_ids, get_userdata_path, load_shortcuts,
+                   create_shortcut, save_shortcuts)
+from util import echo_debug, echo_error, echo_info
 
 
 # ----------------------------------------------------------------------
@@ -49,6 +50,16 @@ def sync_shortcuts():
         echo_info(f"{style(game.platform, fg='yellow')} {game.name}")
         echo_debug(
             f"{game.id}, {game.exe_path}, {game.args}, {game.icon_path}")
+
+        # create shortcut
+        game_shortcut = create_shortcut(game.id,
+                                        game.name,
+                                        game.exe_path,
+                                        icon=game.icon_path,
+                                        launch_options=game.args,
+                                        tags=[game.platform])
+
+        echo_debug(f"{game_shortcut}")
 
 
 # ----------------------------------------------------------------------
