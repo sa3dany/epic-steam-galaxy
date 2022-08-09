@@ -46,9 +46,13 @@ def get_user_ids(userdata_path):
 
 
 def get_shortcuts_path(steamId):
-    """Generate the shortcuts file path"""
+    """Get the path to a user's `shortcuts.vdf` file path"""
 
-    return "C:/Program Files (x86)/Steam/userdata" f"/{steamId}/config/shortcuts.vdf"
+    userdata_path = get_userdata_path()
+    if not userdata_path:
+        raise ValueError("Userdata path does not exist.")
+
+    return Path(userdata_path) / steamId / "config" / "shortcuts.vdf"
 
 
 def load_shortcuts(steamId: str) -> dict:
