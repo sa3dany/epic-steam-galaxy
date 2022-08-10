@@ -6,6 +6,7 @@ from platform import system
 from click import echo, group, option, pass_context, style
 
 from atos import get_installed_games
+from grid import get_gog_stats
 from steam import (create_shortcut, get_user_ids, get_userdata_path,
                    load_shortcuts, save_shortcuts)
 from util import (echo_debug, echo_error, echo_info,
@@ -127,10 +128,17 @@ def sync_shortcuts(ctx):
 
 
 @cli.command()
-def download_grids():
+@option("--gog-username", required=True, help="Your GOG username.")
+def download_grids(gog_username):
     """Download Steam grid images for current shortcuts"""
 
-    pass
+    # TODO: move handling of current steam id to group and pass it in
+    # ctx
+
+    # load shortcuts
+    shortcuts = load_shortcuts()
+
+    get_gog_stats(gog_username)
 
 
 # ----------------------------------------------------------------------
