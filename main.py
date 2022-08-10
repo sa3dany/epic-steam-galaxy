@@ -31,13 +31,6 @@ def is_windows():
 @pass_context
 def cli(ctx, dry_run):
     """AtoS: Steam shortcut manager"""
-    ctx.obj = {"dry_run": dry_run}
-
-
-@cli.command()
-@pass_context
-def sync_shortcuts(ctx):
-    """Sync Steam shortcuts with installed games."""
 
     # Get steam's profiles path
     userdata_path = get_userdata_path()
@@ -53,14 +46,25 @@ def sync_shortcuts(ctx):
         echo_error("Multiple Steam users are not supported yet")
         exit(1)
 
-    user_id = ids[0]
+    ctx.obj = {}
+    ctx.obj["dry_run"] = dry_run
+    ctx.obj["steam_id"] = ids[0]
+
+
+@cli.command()
+@pass_context
+def sync_shortcuts(ctx):
+    """Sync Steam shortcuts with installed games."""
+
+    # get the steam ID from current context
+    steam_id = ctx.obj["steam_id"]
     echo_info(
-        f"Syncing shortcuts for Steam user: {style(user_id, fg='green')}")
+        f"Syncing shortcuts for Steam user: {style(steam_id, fg='green')}")
 
     echo()
 
     # load existing shortcuts
-    existing_shortcuts = load_shortcuts(user_id)
+    existing_shortcuts = load_shortcuts(steam_id)
     existing_shortcuts = existing_shortcuts["shortcuts"]
     echo_info(f"Loaded {len(existing_shortcuts)} existing shortcut(s)")
     for i, shortcut in existing_shortcuts.items():
@@ -121,7 +125,7 @@ def sync_shortcuts(ctx):
 
     # save new shortcuts
     if not ctx.obj["dry_run"]:
-        save_shortcuts(user_id, {"shortcuts": new_shortcuts})
+        save_shortcuts(steam_id, {"shortcuts": new_shortcuts})
         echo_info("Saved new shortcuts")
     else:
         echo_info(f"{style('Dry run', fg='red')}: new shortcuts not saved")
@@ -129,14 +133,13 @@ def sync_shortcuts(ctx):
 
 @cli.command()
 @option("--gog-username", required=True, help="Your GOG username.")
-def download_grids(gog_username):
+@pass_context
+def download_grids(ctx, gog_username):
     """Download Steam grid images for current shortcuts"""
 
-    # TODO: move handling of current steam id to group and pass it in
-    # ctx
-
     # load shortcuts
-    shortcuts = load_shortcuts()
+    steam_id = ctx.obj["steam_id"]
+    shortcuts = load_shortcuts(steam_id)
 
     get_gog_stats(gog_username)
 
