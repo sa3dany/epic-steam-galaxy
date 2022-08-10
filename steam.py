@@ -24,6 +24,26 @@ def get_userdata_path():
     return path
 
 
+def get_shortcuts_path(steamId):
+    """Get the path to a user's `shortcuts.vdf` file path"""
+
+    userdata_path = get_userdata_path()
+    if not userdata_path:
+        raise ValueError("Userdata path does not exist.")
+
+    return Path(userdata_path) / steamId / "config" / "shortcuts.vdf"
+
+
+def get_grids_path(steamId):
+    """Get the path to a user's grid images path"""
+
+    userdata_path = get_userdata_path()
+    if not userdata_path:
+        raise ValueError("Userdata path does not exist.")
+
+    return Path(userdata_path) / steamId / "config" / "grid"
+
+
 def get_user_ids(userdata_path):
     """Get the Steam users (profiles) IDs on the system."""
 
@@ -43,27 +63,6 @@ def get_user_ids(userdata_path):
     ]
 
     return [profile.name for profile in user_profiles]
-
-
-def get_shortcuts_path(steamId):
-    """Get the path to a user's `shortcuts.vdf` file path"""
-
-    userdata_path = get_userdata_path()
-    if not userdata_path:
-        raise ValueError("Userdata path does not exist.")
-
-    return Path(userdata_path) / steamId / "config" / "shortcuts.vdf"
-
-
-def load_shortcuts(steamId: str) -> dict:
-    """Load shortcuts.vdf from disk."""
-
-    try:
-        vdf_file = open(get_shortcuts_path(steamId), "rb")
-        shortcuts = vdf_load(vdf_file.read())
-    except FileNotFoundError:
-        shortcuts = {"shortcuts": {}}
-    return shortcuts
 
 
 def create_shortcut(app_name,
@@ -113,6 +112,17 @@ def create_shortcut(app_name,
     }
 
 
+def load_shortcuts(steamId: str) -> dict:
+    """Load shortcuts.vdf from disk."""
+
+    try:
+        vdf_file = open(get_shortcuts_path(steamId), "rb")
+        shortcuts = vdf_load(vdf_file.read())
+    except FileNotFoundError:
+        shortcuts = {"shortcuts": {}}
+    return shortcuts
+
+
 def save_shortcuts(steamId, shortcuts):
     """Save shortcuts.vdf to disk"""
 
@@ -121,11 +131,6 @@ def save_shortcuts(steamId, shortcuts):
     bytes_written = vdf_file.write(vdf_bytes)
     if bytes_written != len(vdf_bytes):
         raise ValueError("Failed to write all bytes to file.")
-
-
-def get_grid_images_path(steamId):
-    """Generate the Grid images folder path"""
-    return "C:/Program Files (x86)/Steam/userdata" f"/{steamId}/config/grid"
 
 
 def generate_steam_id(exe, name):

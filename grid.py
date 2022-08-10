@@ -1,12 +1,12 @@
 # ----------------------------------------------------------------------
 # Imports
 # ----------------------------------------------------------------------
-import urllib.parse
 from json import load as json_parse
 from os import mkdir, path
 from pathlib import Path
 from time import sleep
 from urllib import request
+from urllib.error import HTTPError
 
 from steam import generate_steam_id, get_grid_images_path, image_to_grid
 
@@ -22,7 +22,7 @@ def get_gog_stats(username):
     req = request.Request(url, method="GET")
     try:
         res = request.urlopen(req)
-    except urllib.error.HTTPError as e:
+    except HTTPError as e:
         if e.code == 404:
             return None
         else:
@@ -49,26 +49,10 @@ def get_gog_stats(username):
     return games
 
 
-# gog_games = {}
-# gog_games_page = 1
-# gog_games_total_pages = None
-# while True:
-#     url = urllib.parse.urljoin(
-#         gogapi.urls.gog_servers["embed"],
-#         gogapi.urls.web_config["account.get_filtered"],
-#     ) + "?%s" % urllib.parse.urlencode({
-#         "mediaType": 1,
-#         "page": gog_games_page
-#     })
-#     body = gog_api.get_json(url)
-#     if body["products"]:
-#         for product in body["products"]:
-#             gog_games[str(product["id"])] = product
-#     gog_games_page += 1
-#     gog_games_total_pages = body["totalPages"]
-#     if gog_games_page > gog_games_total_pages:
-#         break
-# del gog_api, gog_games_page, gog_games_total_pages, url, body
+# ----------------------------------------------------------------------
+# Epic Games
+# ----------------------------------------------------------------------
+# TODO: implement this
 
 # try:
 #     mkdir(get_grid_images_path("000000000"))
@@ -81,7 +65,7 @@ def get_gog_stats(username):
 
 # for game in games:
 #     grid_path = get_grid_images_path("000000000")
-#     steam_id = generate_steam_id(game.get_exe(), game.name, galaxy=False)
+#     steam_id = generate_steam_id(game.get_exe(), game.name)
 #     grid_image_path = path.join(grid_path, f"{steam_id}.jpg")
 #     download_path = path.join(grid_path, "gog", f"{game.id}.jpg")
 
@@ -97,8 +81,5 @@ def get_gog_stats(username):
 #         print(f"  - Not in GOG account: {game.name}")
 #         continue
 
-#     print(f"  - Downloaded grid: {game.name}")
-#     cover_url = f'https:{gog_games[game.id]["image"]}.jpg'
 #     request.urlretrieve(cover_url, download_path)
 #     image_to_grid(download_path, grid_image_path)
-#     sleep(0.5)
