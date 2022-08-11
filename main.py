@@ -1,16 +1,20 @@
 # ----------------------------------------------------------------------
 # Imports
 # ----------------------------------------------------------------------
+from os import mkdir
+from pathlib import Path
 from platform import system
+from urllib.request import urlretrieve
 
 from click import echo, group, option, pass_context, style
 
 from atos import get_installed_games
 from grid import get_gog_stats
-from steam import (create_shortcut, get_user_ids, get_userdata_path,
+from steam import (create_shortcut, generate_steam_id, get_grids_path,
+                   get_user_ids, get_userdata_path, image_to_grid,
                    load_shortcuts, save_shortcuts)
 from util import (echo_debug, echo_error, echo_info,
-                  truncate_default_shortcut_fields)
+                  truncate_default_shortcut_fields, unquote_string)
 
 
 # ----------------------------------------------------------------------
@@ -141,7 +145,86 @@ def download_grids(ctx, gog_username):
     steam_id = ctx.obj["steam_id"]
     shortcuts = load_shortcuts(steam_id)
 
-    get_gog_stats(gog_username)
+    # find the platform tags used in the shortcuts
+    platforms = set()
+    for shortcut in shortcuts["shortcuts"].values():
+        platforms.add(shortcut["tags"][str(0)])
+    echo_info(f"Found {len(platforms)} platform(s): {', '.join(platforms)}")
+
+    echo()
+
+    grids_path = get_grids_path(steam_id)
+    cache_path = str(Path(grids_path) / "atos")
+
+    # make sure these directories exist
+    if not ctx.obj["dry_run"]:
+        try:
+            mkdir(grids_path)
+            echo_debug(f"Created {grids_path}")
+        except FileExistsError:
+            echo_debug(
+                f"grids dir: {style(grids_path, fg='yellow')} already exists")
+        try:
+            mkdir(cache_path)
+            echo_debug(f"Created {cache_path}")
+        except FileExistsError:
+            echo_debug(
+                f"cache dir: {style(cache_path, fg='yellow')} already exists")
+
+    echo()
+
+    # download grids for each platform
+    if "gog" in platforms:
+        echo_info(f"Getting grids for {style('gog', fg='green')}")
+
+        # get gog stats
+        echo_info(f"Downloading stats for {style(gog_username, fg='green')}")
+        games = get_gog_stats(gog_username)
+
+        # get grids
+        echo_info(f"Downloading grids for {style('gog', fg='green')}")
+        for shortcut in shortcuts["shortcuts"].values():
+            if shortcut["tags"][str(0)] != 'gog':
+                continue
+
+            game_id = shortcut["DevkitGameID"]
+            steam_id = generate_steam_id(unquote_string(shortcut["Exe"]),
+                                         shortcut["AppName"])
+
+            game = games.get(game_id, None)
+            if not game:
+                echo_error(f"No stats found for {shortcut['AppName']}")
+                continue
+
+            echo_info(f" - {shortcut['AppName']}")
+
+            source_image_url = game["image"]
+            source_image_path = Path(cache_path) / f"{game_id}.jpg"
+            grid_image_path = Path(grids_path) / f"{steam_id}.jpg"
+
+            if grid_image_path.is_file():
+                echo_debug(
+                    f"Grid image {style(grid_image_path, fg='yellow')} already exists"
+                )
+                continue
+
+            if source_image_path.is_file():
+                echo_debug(
+                    f"Source image {style(source_image_path, fg='yellow')} already exists"
+                )
+                if not ctx.obj["dry_run"]:
+                    image_to_grid(source_image_path, str(grid_image_path))
+                continue
+
+            if not ctx.obj["dry_run"]:
+                urlretrieve(source_image_url, str(source_image_path))
+                image_to_grid(source_image_path, str(grid_image_path))
+
+            # TODO: 2652489558_hero.png
+
+            echo_debug(f"Source image url: {source_image_url}")
+            echo_debug(f"Source image path: {source_image_path}")
+            echo_debug(f"Grid image path: {grid_image_path}")
 
 
 # ----------------------------------------------------------------------
