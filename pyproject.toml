@@ -24,3 +24,6 @@ esg = "esg.scripts:cli"
 
 [tool.setuptools.packages.find]
 include = ["esg*"]
+
+[tool.black]
+line-length = 80
