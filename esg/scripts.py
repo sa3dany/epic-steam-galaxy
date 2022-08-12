@@ -3,18 +3,30 @@
 # ----------------------------------------------------------------------
 from os import mkdir
 from pathlib import Path
-from platform import system
 from urllib.request import urlretrieve
 
 from click import echo, group, option, pass_context, style
 
-from esg.main import get_installed_games
 from esg.grid import get_gog_stats
-from esg.steam import (create_shortcut, generate_steam_id, get_grids_path,
-                       get_user_ids, get_userdata_path, image_to_grid,
-                       load_shortcuts, save_shortcuts)
-from esg.util import (echo_debug, echo_error, echo_info,
-                      truncate_default_shortcut_fields, unquote_string)
+from esg.main import get_installed_games
+from esg.platforms import gog
+from esg.steam import (
+    create_shortcut,
+    generate_steam_id,
+    get_grids_path,
+    get_user_ids,
+    get_userdata_path,
+    image_to_grid,
+    load_shortcuts,
+    save_shortcuts,
+)
+from esg.util import (
+    echo_debug,
+    echo_error,
+    echo_info,
+    truncate_default_shortcut_fields,
+    unquote_string,
+)
 
 
 # ----------------------------------------------------------------------
@@ -28,10 +40,12 @@ def is_windows():
 # Commands
 # ----------------------------------------------------------------------
 @group()
-@option('--dry-run',
-        default=False,
-        is_flag=True,
-        help="Don't save any changes to disk.")
+@option(
+    "--dry-run",
+    default=False,
+    is_flag=True,
+    help="Don't save any changes to disk.",
+)
 @pass_context
 def cli(ctx, dry_run):
     """Epic Steam Galaxy: Non-Steam game shortcut manager"""
@@ -63,7 +77,8 @@ def sync_shortcuts(ctx):
     # get the steam ID from current context
     steam_id = ctx.obj["steam_id"]
     echo_info(
-        f"Syncing shortcuts for Steam user: {style(steam_id, fg='green')}")
+        f"Syncing shortcuts for Steam user: {style(steam_id, fg='green')}"
+    )
 
     echo()
 
@@ -90,7 +105,7 @@ def sync_shortcuts(ctx):
         # get last play time from existing shortcuts if available
         last_play_time = 0
         for shortcut in existing_shortcuts.values():
-            if shortcut['DevkitGameID'] == game.id:
+            if shortcut["DevkitGameID"] == game.id:
                 saved_last_play_time = shortcut.get("LastPlayTime", 0)
                 if saved_last_play_time > 0:
                     last_play_time = saved_last_play_time
@@ -100,13 +115,15 @@ def sync_shortcuts(ctx):
                     break
 
         # create shortcut
-        game_shortcut = create_shortcut(game.name,
-                                        game.exe_path,
-                                        icon=game.icon_path,
-                                        launch_options=game.args,
-                                        devkit_game_id=game.id,
-                                        last_play_time=last_play_time,
-                                        tags=[game.platform])
+        game_shortcut = create_shortcut(
+            game.name,
+            game.exe_path,
+            icon=game.icon_path,
+            launch_options=game.args,
+            devkit_game_id=game.id,
+            last_play_time=last_play_time,
+            tags=[game.platform],
+        )
         echo_debug(f"{truncate_default_shortcut_fields(game_shortcut)}")
 
         # add to new shortcuts dictionary
@@ -118,14 +135,13 @@ def sync_shortcuts(ctx):
     # Keep them as-is at the end of the list
     custom_shortcuts_count = 0
     for shortcut in existing_shortcuts.values():
-        if shortcut['DevkitGameID'] not in [game.id for game in games]:
+        if shortcut["DevkitGameID"] not in [game.id for game in games]:
             new_shortcuts[str(len(new_shortcuts))] = shortcut
             custom_shortcuts_count += 1
             echo_debug(
                 f"Custom shortcut for {style(shortcut['AppName'], fg='green')} added"
             )
-    echo_info(
-        f"{custom_shortcuts_count} custom shortcut(s) found and restored")
+    echo_info(f"{custom_shortcuts_count} custom shortcut(s) found and restored")
 
     # save new shortcuts
     if not ctx.obj["dry_run"]:
@@ -136,10 +152,17 @@ def sync_shortcuts(ctx):
 
 
 @cli.command()
-@option("--gog-username", required=True, help="Your GOG username.")
+@option("--gog-username", required=False, help="Your GOG username.")
 @pass_context
 def download_grids(ctx, gog_username):
     """Download Steam grid images for current shortcuts"""
+
+    # try to get username from Galaxy config
+    if not gog_username:
+        gog_username = gog.get_username()
+        if not gog_username:
+            echo_error("Could not find GOG username")
+            exit(1)
 
     # load shortcuts
     steam_id = ctx.obj["steam_id"]
@@ -163,13 +186,15 @@ def download_grids(ctx, gog_username):
             echo_debug(f"Created {grids_path}")
         except FileExistsError:
             echo_debug(
-                f"grids dir: {style(grids_path, fg='yellow')} already exists")
+                f"grids dir: {style(grids_path, fg='yellow')} already exists"
+            )
         try:
             mkdir(cache_path)
             echo_debug(f"Created {cache_path}")
         except FileExistsError:
             echo_debug(
-                f"cache dir: {style(cache_path, fg='yellow')} already exists")
+                f"cache dir: {style(cache_path, fg='yellow')} already exists"
+            )
 
     echo()
 
@@ -184,12 +209,13 @@ def download_grids(ctx, gog_username):
         # get grids
         echo_info(f"Downloading grids for {style('gog', fg='green')}")
         for shortcut in shortcuts["shortcuts"].values():
-            if shortcut["tags"][str(0)] != 'gog':
+            if shortcut["tags"][str(0)] != "gog":
                 continue
 
             game_id = shortcut["DevkitGameID"]
-            steam_id = generate_steam_id(unquote_string(shortcut["Exe"]),
-                                         shortcut["AppName"])
+            steam_id = generate_steam_id(
+                unquote_string(shortcut["Exe"]), shortcut["AppName"]
+            )
 
             game = games.get(game_id, None)
             if not game:

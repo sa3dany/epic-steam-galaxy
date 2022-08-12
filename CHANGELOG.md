@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.3 (Unreleased)
+
+- Get logged-in Galaxy username from Galaxy's local app data
+  `config.json`
+
 ## 0.0.2 (Unreleased)
 
 - Add `--dry-run` flag to the CLI.
