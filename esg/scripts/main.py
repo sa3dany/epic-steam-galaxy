@@ -8,13 +8,13 @@ from urllib.request import urlretrieve
 
 from click import echo, group, option, pass_context, style
 
-from egs import get_installed_games
-from grid import get_gog_stats
-from steam import (create_shortcut, generate_steam_id, get_grids_path,
-                   get_user_ids, get_userdata_path, image_to_grid,
-                   load_shortcuts, save_shortcuts)
-from util import (echo_debug, echo_error, echo_info,
-                  truncate_default_shortcut_fields, unquote_string)
+from esg.main import get_installed_games
+from esg.grid import get_gog_stats
+from esg.steam import (create_shortcut, generate_steam_id, get_grids_path,
+                       get_user_ids, get_userdata_path, image_to_grid,
+                       load_shortcuts, save_shortcuts)
+from esg.util import (echo_debug, echo_error, echo_info,
+                      truncate_default_shortcut_fields, unquote_string)
 
 
 # ----------------------------------------------------------------------
