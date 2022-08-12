@@ -1,0 +1,18 @@
+{
+  "python.formatting.provider": "yapf",
+  "cSpell.words": [
+    "autoraise",
+    "DLCs",
+    "epicgames",
+    "flatpak",
+    "gogapi",
+    "goggame",
+    "gogrc",
+    "localconfig",
+    "PROGRAMDATA",
+    "programfiles",
+    "resizeimage",
+    "secho",
+    "userdata"
+  ]
+}
