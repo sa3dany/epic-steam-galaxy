@@ -21,3 +21,6 @@ dynamic = ["version"]
 
 [project.scripts]
 esg = "esg.scripts:cli"
+
+[tool.setuptools.packages.find]
+include = ["esg*"]
