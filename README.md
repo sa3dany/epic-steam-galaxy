@@ -1,7 +1,5 @@
-# AtoS - Any to Steam
+# Epic Steam Galaxy
 
-A script to add all installed GOG Galaxy and Epic Launcher games in your
-system to Steam as external game shortcuts.
-
-Project is alpha quality and just a proof of concept. Please make a
-backup of your existing shortcuts vdf file before using this script.
+A command-line app to add all installed GOG Galaxy and Epic Games
+Launcher (EGS) games in your system to Steam as non-Steam game
+shortcuts.

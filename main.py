@@ -8,7 +8,7 @@ from urllib.request import urlretrieve
 
 from click import echo, group, option, pass_context, style
 
-from atos import get_installed_games
+from egs import get_installed_games
 from grid import get_gog_stats
 from steam import (create_shortcut, generate_steam_id, get_grids_path,
                    get_user_ids, get_userdata_path, image_to_grid,
@@ -34,7 +34,7 @@ def is_windows():
         help="Don't save any changes to disk.")
 @pass_context
 def cli(ctx, dry_run):
-    """AtoS: Steam shortcut manager"""
+    """Epic Steam Galaxy: Non-Steam game shortcut manager"""
 
     # Get steam's profiles path
     userdata_path = get_userdata_path()
