@@ -199,6 +199,7 @@ def download_grids(ctx, gog_username):
     echo()
 
     # download grids for each platform
+    # TODO: refactor the reusable code across platforms
     if "gog" in platforms:
         echo_info(f"Getting grids for {style('gog', fg='green')}")
 
@@ -246,7 +247,7 @@ def download_grids(ctx, gog_username):
                 urlretrieve(source_image_url, str(source_image_path))
                 image_to_grid(source_image_path, str(grid_image_path))
 
-            # TODO: 2652489558_hero.png
+            # TODO: 2652489558_hero.png (steam client cover images (wide))
 
             echo_debug(f"Source image url: {source_image_url}")
             echo_debug(f"Source image path: {source_image_path}")
