@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------
 # Imports
 # ----------------------------------------------------------------------
-from os import mkdir
+from os import mkdir, system
 from pathlib import Path
 from urllib.request import urlretrieve
 
