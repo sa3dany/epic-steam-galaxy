@@ -177,7 +177,7 @@ def download_grids(ctx, gog_username):
     echo()
 
     grids_path = get_grids_path(steam_id)
-    cache_path = str(Path(grids_path) / "atos")
+    cache_path = str(Path(grids_path) / "esg-cache")
 
     # make sure these directories exist
     if not ctx.obj["dry_run"]:
