@@ -176,7 +176,9 @@ def download_grids(ctx, gog_username):
     # find the platform tags used in the shortcuts
     platforms = set()
     for shortcut in shortcuts["shortcuts"].values():
-        platforms.add(shortcut["tags"][str(0)])
+        first_tag = shortcut["tags"].get("0", None)
+        if first_tag:
+            platforms.add(first_tag)
     echo_info(f"Found {len(platforms)} platform(s): {', '.join(platforms)}")
 
     echo()
@@ -215,7 +217,7 @@ def download_grids(ctx, gog_username):
         # get grids
         echo_info(f"Downloading grids for {style('gog', fg='green')}")
         for shortcut in shortcuts["shortcuts"].values():
-            if shortcut["tags"][str(0)] != "gog":
+            if shortcut["tags"].get("0", "") != "gog":
                 continue
 
             game_id = shortcut["DevkitGameID"]
@@ -286,7 +288,7 @@ def download_grids(ctx, gog_username):
         # get grids
         echo_info(f"Downloading grids for {style('epic', fg='green')}")
         for shortcut in shortcuts["shortcuts"].values():
-            if shortcut["tags"][str(0)] != "epic":
+            if shortcut["tags"].get("0", "") != "epic":
                 continue
 
             game_id = shortcut["DevkitGameID"]
