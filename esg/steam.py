@@ -58,30 +58,33 @@ def get_user_ids(userdata_path):
 
     # filter to just the directories that contain a localconfig.vdf file
     user_profiles = [
-        x for x in userdata_path.iterdir()
+        x
+        for x in userdata_path.iterdir()
         if x.is_dir() and (x / "config" / "localconfig.vdf").exists()
     ]
 
     return [profile.name for profile in user_profiles]
 
 
-def create_shortcut(app_name,
-                    exe,
-                    app_id="",
-                    start_dir="",
-                    icon="",
-                    shortcut_path="",
-                    launch_options="",
-                    is_hidden=False,
-                    allow_desktop_config=True,
-                    allow_overlay=True,
-                    open_vr=False,
-                    devkit=False,
-                    devkit_game_id="",
-                    devkit_override_app_id=False,
-                    last_play_time=0,
-                    flatpak_app_id="",
-                    tags=[]):
+def create_shortcut(
+    app_name,
+    exe,
+    app_id="",
+    start_dir="",
+    icon="",
+    shortcut_path="",
+    launch_options="",
+    is_hidden=False,
+    allow_desktop_config=True,
+    allow_overlay=True,
+    open_vr=False,
+    devkit=False,
+    devkit_game_id="",
+    devkit_override_app_id=False,
+    last_play_time=0,
+    flatpak_app_id="",
+    tags=[],
+):
     """Create a shortcut dictionary for Steam."""
 
     if not app_name:
@@ -107,8 +110,9 @@ def create_shortcut(app_name,
         "DevkitOverrideAppID": int(devkit_override_app_id),
         "LastPlayTime": last_play_time,
         "FlatpakAppID": flatpak_app_id,
-        "tags": {str(i): tags[i]
-                 for i in range(len(tags))} if len(tags) else {},
+        "tags": {str(i): tags[i] for i in range(len(tags))}
+        if len(tags)
+        else {},
     }
 
 

@@ -6,6 +6,8 @@ from pathlib import Path
 from urllib.request import urlretrieve
 
 from click import echo, group, option, pass_context, style
+from legendary.core import LegendaryCore
+from legendary.models.exceptions import InvalidCredentialsError
 
 from esg.grid import get_gog_stats
 from esg.main import get_installed_games
@@ -64,6 +66,8 @@ def cli(ctx, dry_run):
     if len(ids) > 1:
         echo_error("Multiple Steam users are not supported yet")
         exit(1)
+
+    # TODO: log steam user id selected
 
     ctx.obj = {}
     ctx.obj["dry_run"] = dry_run
@@ -260,6 +264,78 @@ def download_grids(ctx, gog_username):
                 echo_debug(f"Source image url: {source_image_url}")
                 echo_debug(f"Source image path: {source_image_path}")
                 echo_debug(f"Grid image path: {grid_path}")
+
+    echo()
+
+    if "epic" in platforms:
+        echo_info(f"Getting grids for {style('epic', fg='green')}")
+
+        # Prepare the legendary core
+        legendary = LegendaryCore()
+        try:
+            if not legendary.login():
+                echo_error("Could not log in to Epic")
+        except ValueError:
+            pass
+        except InvalidCredentialsError:
+            legendary.lgd.invalidate_userdata()
+
+        # Grab the list of games in user's library
+        games = legendary.egs.get_library_items()
+
+        # get grids
+        echo_info(f"Downloading grids for {style('epic', fg='green')}")
+        for shortcut in shortcuts["shortcuts"].values():
+            if shortcut["tags"][str(0)] != "epic":
+                continue
+
+            game_id = shortcut["DevkitGameID"]
+            steam_id = generate_steam_id(
+                unquote_string(shortcut["Exe"]), shortcut["AppName"]
+            )
+
+            echo_info(f" - {shortcut['AppName']}")
+
+            source_image_path = Path(cache_path) / f"{game_id}.jpg"
+            grid_image_path = Path(grids_path) / f"{steam_id}.jpg"
+            grid_paths = [
+                Path(grids_path) / f"{steam_id}.jpg",
+                Path(grids_path) / f"{old_steam_id}.jpg",
+            ]
+
+            for grid_path in grid_paths:
+                if grid_path.is_file():
+                    echo_debug(
+                        f"Grid image {style(grid_path, fg='yellow')} already exists"
+                    )
+                    continue
+
+                if source_image_path.is_file():
+                    echo_debug(
+                        f"Source image {style(source_image_path, fg='yellow')} already exists"
+                    )
+                    if not ctx.obj["dry_run"]:
+                        image_to_grid(source_image_path, str(grid_path))
+                    continue
+
+                # Get the game image URLs
+                source_image_url = None
+                for game in games:
+                    if game["catalogItemId"] != game_id:
+                        continue
+                    game_info = legendary.egs.get_game_info(
+                        namespace=game["namespace"],
+                        catalog_item_id=game_id,
+                    )
+                    key_images = game_info["keyImages"]
+                    for key_image in key_images:
+                        if "Tall" not in key_image["type"]:
+                            source_image_url = key_image["url"]
+                            break
+
+                if not ctx.obj["dry_run"]:
+                    urlretrieve(source_image_url, str(source_image_path))
+                    image_to_grid(source_image_path, str(grid_path))
 
 
 # ----------------------------------------------------------------------
