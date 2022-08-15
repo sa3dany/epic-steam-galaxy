@@ -12,6 +12,7 @@ from esg.main import get_installed_games
 from esg.platforms import gog
 from esg.steam import (
     create_shortcut,
+    generate_old_steam_id,
     generate_steam_id,
     get_grids_path,
     get_user_ids,
@@ -214,6 +215,9 @@ def download_grids(ctx, gog_username):
                 continue
 
             game_id = shortcut["DevkitGameID"]
+            old_steam_id = generate_old_steam_id(
+                unquote_string(shortcut["Exe"]), shortcut["AppName"]
+            )
             steam_id = generate_steam_id(
                 unquote_string(shortcut["Exe"]), shortcut["AppName"]
             )
@@ -227,31 +231,35 @@ def download_grids(ctx, gog_username):
 
             source_image_url = game["image"]
             source_image_path = Path(cache_path) / f"{game_id}.jpg"
-            grid_image_path = Path(grids_path) / f"{steam_id}.jpg"
+            grid_paths = [
+                Path(grids_path) / f"{steam_id}.jpg",
+                Path(grids_path) / f"{old_steam_id}.jpg",
+            ]
 
-            if grid_image_path.is_file():
-                echo_debug(
-                    f"Grid image {style(grid_image_path, fg='yellow')} already exists"
-                )
-                continue
+            for grid_path in grid_paths:
+                if grid_path.is_file():
+                    echo_debug(
+                        f"Grid image {style(grid_path, fg='yellow')} already exists"
+                    )
+                    continue
 
-            if source_image_path.is_file():
-                echo_debug(
-                    f"Source image {style(source_image_path, fg='yellow')} already exists"
-                )
+                if source_image_path.is_file():
+                    echo_debug(
+                        f"Source image {style(source_image_path, fg='yellow')} already exists"
+                    )
+                    if not ctx.obj["dry_run"]:
+                        image_to_grid(source_image_path, str(grid_path))
+                    continue
+
                 if not ctx.obj["dry_run"]:
-                    image_to_grid(source_image_path, str(grid_image_path))
-                continue
+                    urlretrieve(source_image_url, str(source_image_path))
+                    image_to_grid(source_image_path, str(grid_path))
 
-            if not ctx.obj["dry_run"]:
-                urlretrieve(source_image_url, str(source_image_path))
-                image_to_grid(source_image_path, str(grid_image_path))
+                # TODO: 2652489558_hero.png (steam client cover images (wide))
 
-            # TODO: 2652489558_hero.png (steam client cover images (wide))
-
-            echo_debug(f"Source image url: {source_image_url}")
-            echo_debug(f"Source image path: {source_image_path}")
-            echo_debug(f"Grid image path: {grid_image_path}")
+                echo_debug(f"Source image url: {source_image_url}")
+                echo_debug(f"Source image path: {source_image_path}")
+                echo_debug(f"Grid image path: {grid_path}")
 
 
 # ----------------------------------------------------------------------

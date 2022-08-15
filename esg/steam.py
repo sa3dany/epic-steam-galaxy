@@ -133,7 +133,7 @@ def save_shortcuts(steamId, shortcuts):
         raise ValueError("Failed to write all bytes to file.")
 
 
-def generate_steam_id(exe, name):
+def generate_old_steam_id(exe, name):
     """Generate an ID for a steam shortcut to use for naming grid images.
     The format of the string used to generate the ID used by Steam is:
     "{game_exe_path}"{game_name}
@@ -141,6 +141,18 @@ def generate_steam_id(exe, name):
     Notice that the game_exe_path is quoted.
 
     https://github.com/Hafas/node-steam-shortcuts
+    """
+
+    input_string = f'"{exe}"{name}'
+    top_32 = crc32(input_string.encode()) | 0x80000000
+    full_64 = (top_32 << 32) | 0x02000000
+    return str(full_64)
+
+
+def generate_steam_id(exe, name):
+    """Generate an ID for a steam shortcut to use for naming grid
+    images. Uses the new format for the new steam library. Does not
+    apply to big picture mode yet.
     """
 
     input_string = f'"{exe}"{name}'
