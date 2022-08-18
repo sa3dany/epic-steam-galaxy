@@ -3,6 +3,7 @@
 # ----------------------------------------------------------------------
 from os import mkdir, system
 from pathlib import Path
+from platform import system
 from urllib.request import urlretrieve
 
 from click import echo, group, option, pass_context, style
@@ -160,7 +161,7 @@ def sync_shortcuts(ctx):
 @option("--gog-username", required=False, help="Your GOG username.")
 @pass_context
 def download_grids(ctx, gog_username):
-    """Download Steam grid images for current shortcuts"""
+    """Download Steam grid images for current shortcuts."""
 
     # try to get username from Galaxy config
     if not gog_username:
@@ -341,11 +342,13 @@ def download_grids(ctx, gog_username):
 
 
 # ----------------------------------------------------------------------
-# Main
+# Module entry point
 # ----------------------------------------------------------------------
 if __name__ == "__main__":
-    if not is_windows():
-        echo_error(f"Unsupported OS: {style(system(), fg='green')}")
+    # Currently only Windows x64 is supported
+    os_name = system()
+    if os_name != "Windows":
+        echo_error(f"{os_name} is currently unsupported.")
         exit(1)
 
     cli()

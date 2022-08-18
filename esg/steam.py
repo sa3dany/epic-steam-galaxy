@@ -1,6 +1,3 @@
-# ----------------------------------------------------------------------
-# Imports
-# ----------------------------------------------------------------------
 from binascii import crc32
 from os.path import expandvars
 from pathlib import Path
@@ -11,9 +8,6 @@ from vdf import binary_dumps as vdf_dump
 from vdf import binary_loads as vdf_load
 
 
-# ----------------------------------------------------------------------
-# Exports
-# ----------------------------------------------------------------------
 def get_userdata_path():
     """Get the path to the steam userdata directory."""
 

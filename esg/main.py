@@ -1,47 +1,9 @@
-# ----------------------------------------------------------------------
-# Imports
-# ----------------------------------------------------------------------
 from json import load as json_parse
 from os.path import expandvars
 from pathlib import Path
 from urllib.parse import quote, urlencode
 
-
-# ----------------------------------------------------------------------
-# Installed game interface
-# ----------------------------------------------------------------------
-class Game:
-    """Game class."""
-
-    def __init__(
-        self,
-        platform=None,
-        id=None,
-        name=None,
-        exe_path=None,
-        args="",
-        icon_path="",
-    ):
-        if platform is None:
-            raise ValueError("Platform is required.")
-        if platform not in ["epic", "gog"]:
-            raise ValueError(f"Invalid platform: {platform}")
-        self.platform = platform
-
-        if id is None:
-            raise ValueError("ID is required.")
-        self.id = id
-
-        if not name:
-            raise ValueError("Name is required.")
-        self.name = name
-
-        if not exe_path:
-            raise ValueError("Executable path is required.")
-        self.exe_path = exe_path
-
-        self.args = args
-        self.icon_path = icon_path
+from esg.game import Game
 
 
 # ----------------------------------------------------------------------
@@ -125,12 +87,14 @@ def _get_installed_epic_games():
         install_path = manifest["InstallLocation"]
         icon_path = Path(install_path) / manifest["LaunchExecutable"]
 
-        game = Game(platform="epic",
-                    id=manifest["CatalogItemId"],
-                    name=manifest["DisplayName"],
-                    exe_path=launcher_url,
-                    args="",
-                    icon_path=icon_path)
+        game = Game(
+            platform="epic",
+            id=manifest["CatalogItemId"],
+            name=manifest["DisplayName"],
+            exe_path=launcher_url,
+            args="",
+            icon_path=icon_path,
+        )
 
         games.append(game)
 

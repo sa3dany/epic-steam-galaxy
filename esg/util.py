@@ -1,14 +1,8 @@
-# ----------------------------------------------------------------------
-# Imports
-# ----------------------------------------------------------------------
-from click import echo, style
+from click import echo, secho, style
 
 
-# ----------------------------------------------------------------------
-# Output functions
-# ----------------------------------------------------------------------
 def echo_error(message):
-    echo(f"[{style('error', fg='red')}] {message}", err=True)
+    secho(f"{message}", err=True, fg="red")
 
 
 def echo_info(message):
@@ -19,16 +13,10 @@ def echo_debug(message):
     echo(f"[{style('debug', fg='magenta')}] {message}")
 
 
-# ----------------------------------------------------------------------
-# String functions
-# ----------------------------------------------------------------------
 def unquote_string(quoted_string):
     return quoted_string[1:-1]
 
 
-# ----------------------------------------------------------------------
-# Debug functions
-# ----------------------------------------------------------------------
 def truncate_default_shortcut_fields(shortcut: dict) -> dict:
     """Truncate default shortcut fields to reduce noise in logs"""
 
@@ -39,8 +27,12 @@ def truncate_default_shortcut_fields(shortcut: dict) -> dict:
             truncated_shortcut[key] = value
 
         elif key in [
-                "StartDir", "icon", "ShortcutPath", "LaunchOptions",
-                "DevkitGameID", "FlatpakAppID"
+            "StartDir",
+            "icon",
+            "ShortcutPath",
+            "LaunchOptions",
+            "DevkitGameID",
+            "FlatpakAppID",
         ]:
             if value:
                 truncated_shortcut[key] = value
