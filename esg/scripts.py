@@ -34,25 +34,15 @@ from esg.util import (
 
 
 # ----------------------------------------------------------------------
-# Helper functions
-# ----------------------------------------------------------------------
-def is_windows():
-    return system() == "Windows"
-
-
-# ----------------------------------------------------------------------
-# Commands
+# CLI
 # ----------------------------------------------------------------------
 @group()
-@option(
-    "--dry-run",
-    default=False,
-    is_flag=True,
-    help="Don't save any changes to disk.",
-)
+@option("-v", is_flag=True, help="Enable verbose output.")
+@option("--dry-run", is_flag=True, help="Don't save changes to disk.")
 @pass_context
-def cli(ctx, dry_run):
-    """Epic Steam Galaxy: Non-Steam game shortcut manager"""
+def cli(ctx, verbose, dry_run):
+    """
+    Epic Steam Galaxy: Non-Steam game shortcut manager"""
 
     # Get steam's profiles path
     userdata_path = get_userdata_path()
