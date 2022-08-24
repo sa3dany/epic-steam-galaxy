@@ -43,7 +43,10 @@ class SteamProfiles:
                 continue
 
             with open(localconfig_path, encoding="utf-8") as localconfig_file:
-                localconfig = vdf.load(localconfig_file)
+                try:
+                    localconfig = vdf.load(localconfig_file)
+                except:
+                    localconfig = {}
 
             profile_id = user_path.name
             profile_name = (

@@ -10,8 +10,10 @@
     "gogrc",
     "levelname",
     "localconfig",
+    "procs",
     "PROGRAMDATA",
     "programfiles",
+    "psutil",
     "resizeimage",
     "secho",
     "userdata"

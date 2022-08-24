@@ -10,17 +10,11 @@ requires-python = ">=3.7"
 keywords = ["epic", "steam", "galaxy", "cli"]
 license = { file = "LICENSE" }
 classifiers = ["Programming Language :: Python :: 3"]
-dependencies = [
-  'click',
-  'legendary-gl',
-  'python-resize-image',
-  'requests',
-  'vdf',
-]
+dependencies = ['click', 'legendary-gl', 'psutil', 'python-resize-image', 'requests', 'vdf']
 dynamic = ["version"]
 
 [project.scripts]
-esg = "esg.scripts:cli"
+  esg = "esg.cli:cli"
 
 [tool.setuptools.packages.find]
 include = ["esg*"]

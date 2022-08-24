@@ -2,13 +2,45 @@ import logging
 import platform
 import sys
 from pathlib import Path
+from typing import List
 
 import click
+import psutil
 
-from esg.steam.profiles import SteamProfiles
-
+from .steam.profiles import Profile, SteamProfiles
 from .steam.shortcuts import SteamShortcuts
-from .util import get_steam_userdata_paths
+
+
+# ----------------------------------------------------------------------
+#  Helpers
+# ----------------------------------------------------------------------
+def get_steam_process_info() -> psutil.Process | None:
+    steam_process = None
+    for proc in psutil.process_iter(["name"]):
+        if proc.info["name"] == "steam.exe":
+            return proc
+    if not steam_process:
+        return None
+
+
+def wait_process_end(process: psutil.Process) -> None:
+    try:
+        psutil.wait_procs([process])
+    except KeyboardInterrupt:
+        exit(1)
+
+
+def prompt_steam_profile(steam_profiles: List[Profile]) -> Profile:
+    for i, profile in enumerate(steam_profiles.list()):
+        click.echo(f" {i+1}. {profile.name or profile.id}")
+        profile_index = click.prompt(
+            "Continue using profile",
+            show_choices=True,
+            type=click.Choice(
+                [str(i + 1) for i in range(steam_profiles.count())]
+            ),
+        )
+        return steam_profiles.list()[int(profile_index) - 1]
 
 
 # ----------------------------------------------------------------------
@@ -54,17 +86,40 @@ def cli(
     epic_manifests: str | None,
     epic_clear_credentials: bool,
 ):
-    # set logging level & format
+    # ---------------------------------- setup app-wide logging defaults
     logging.basicConfig(
         style="{",
         format="{levelname}: {message}",
         level=logging.DEBUG if verbose else logging.INFO,
     )
 
-    # At this point I know that if any dir path cli option is provided:
-    #   - it exists
-    #   - it is a dir
+    # ------------------------------------------- verify os requirements
+    system_name = platform.system()
+    if system_name != "Windows":
+        click.secho(
+            f"{system_name} is not supported.",
+            err=True,
+            fg="red",
+        )
+        exit(1)
+    is_64bits = sys.maxsize > 2**32
+    if not is_64bits:
+        click.secho(
+            "32-bit systems are not supported.",
+            err=True,
+            fg="red",
+        )
+        exit(1)
 
+    # ------------------------------------------- Steam already running?
+    steam_process = get_steam_process_info()
+    if steam_process:
+        logging.warning("Steam is currently running")
+        click.echo("Please exit Steam to continue ...")
+        wait_process_end(steam_process)
+
+    # ------------------------------------------------ Get Steam profile
+    steam_profile = None
     try:
         steam_profiles = SteamProfiles(steam_userdata)
     except ValueError:
@@ -73,7 +128,6 @@ def cli(
             "Try the `--steam-userdata` option.",
         )
         exit(1)
-
     if steam_profiles.count() == 0:
         logging.error(
             "Could not find any Steam profiles.\n"
@@ -81,20 +135,12 @@ def cli(
         )
         exit(1)
 
-    if steam_profiles.count() > 1:
-        click.echo("Multiple Steam profiles found:")
-        for i, profile in enumerate(steam_profiles.list()):
-            click.echo(f" {i+1}. {profile.name or profile.id}")
-        profile_index = click.prompt(
-            "Continue using profile",
-            show_choices=True,
-            type=click.Choice(
-                [str(i + 1) for i in range(steam_profiles.count())]
-            ),
-        )
-        steam_profile = steam_profiles.list()[int(profile_index) - 1]
-    else:
+    if steam_profiles.count() == 1:
         steam_profile = steam_profiles.list()[0]
+
+    elif steam_profiles.count() > 1:
+        click.echo("Multiple Steam profiles found:")
+        steam_profile = prompt_steam_profile(steam_profiles)
 
     logging.info(f"Using Steam profile: {steam_profile.id}")
     logging.debug(f"Steam profile: {steam_profile}")
@@ -106,23 +152,4 @@ def cli(
 # Entry point
 # ----------------------------------------------------------------------
 if __name__ == "__main__":
-    system_name = platform.system()
-
-    if system_name != "Windows":
-        click.secho(
-            f"{system_name} is not supported.",
-            err=True,
-            fg="red",
-        )
-        exit(1)
-
-    is_64bits = sys.maxsize > 2**32
-    if not is_64bits:
-        click.secho(
-            "32-bit systems are not supported.",
-            err=True,
-            fg="red",
-        )
-        exit(1)
-
     cli()
