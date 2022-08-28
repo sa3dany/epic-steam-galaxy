@@ -1,17 +1,24 @@
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
-build-backend = "setuptools.build_meta"
+  build-backend = "setuptools.build_meta"
+  requires = ["setuptools", "setuptools-scm"]
 
 [project]
-name = "esg-cli"
-description = "Adds GOG & EGL games to Steam as shortcuts."
-readme = "README.md"
-requires-python = ">=3.7"
-keywords = ["epic", "steam", "galaxy", "cli"]
-license = { file = "LICENSE" }
-classifiers = ["Programming Language :: Python :: 3"]
-dependencies = ['click', 'legendary-gl', 'psutil', 'python-resize-image', 'requests', 'vdf']
-dynamic = ["version"]
+  classifiers = ["Programming Language :: Python :: 3"]
+  dependencies = [
+    'click',
+    'legendary-gl',
+    'psutil',
+    'python-resize-image',
+    'requests',
+    'vdf',
+  ]
+  description = "Adds GOG & EGL games to Steam as shortcuts."
+  dynamic = ["version"]
+  keywords = ["epic", "steam", "galaxy", "cli"]
+  license = { file = "LICENSE" }
+  name = "esg-cli"
+  readme = "README.md"
+  requires-python = ">=3.7"
 
 [project.scripts]
   esg = "esg.cli:cli"
@@ -20,4 +27,4 @@ dynamic = ["version"]
 include = ["esg*"]
 
 [tool.black]
-line-length = 80
+  line-length = 80
